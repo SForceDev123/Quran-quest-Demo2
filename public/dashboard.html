@@ -1,0 +1,1831 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qur'an Quest</title>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#0f0d25"/>
+  <style>
+    :root {
+      --bg:          #0f0d25;
+      --card:        #1a1738;
+      --surface:     #201c42;
+      --gold:        #c9a84c;
+      --gold-light:  #e8c96d;
+      --gold-dim:    rgba(201,168,76,.18);
+      --gold-border: rgba(201,168,76,.35);
+      --gold-border2:rgba(201,168,76,.65);
+      --text:        #f0e6d3;
+      --muted:       #9d8f7a;
+      --good:        #4ade80;
+      --bad:         #fb7185;
+      --sb-bg:       #07061a;
+      --bg-glow1:    rgba(90,60,160,.28);
+      --bg-glow2:    rgba(60,40,110,.2);
+    }
+    [data-theme="light"] {
+      --bg:          #f5ede0;
+      --card:        #fff8ee;
+      --surface:     #fdf0d8;
+      --gold:        #a67c2a;
+      --gold-light:  #c9a84c;
+      --gold-dim:    rgba(180,130,40,.14);
+      --gold-border: rgba(180,130,40,.3);
+      --gold-border2:rgba(180,130,40,.55);
+      --text:        #2a1a05;
+      --muted:       #7a6040;
+      --good:        #16a34a;
+      --bad:         #dc2626;
+      --sb-bg:       #fce9c8;
+      --bg-glow1:    rgba(220,170,80,.2);
+      --bg-glow2:    rgba(200,140,50,.12);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{-webkit-text-size-adjust:100%;}
+    body{
+      min-height:100vh;
+      background-color:var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 55% at 50% 0%,var(--bg-glow1) 0%,transparent 70%),
+        radial-gradient(ellipse 60% 40% at 50% 100%,var(--bg-glow2) 0%,transparent 60%);
+      color:var(--text);
+      font-family:'Georgia','Times New Roman',serif;
+      display:flex;flex-direction:column;align-items:center;
+      overflow-x:hidden;
+    }
+    button{touch-action:manipulation;cursor:pointer;border:none;background:none;}
+
+    /* ── SCREENS ───────────────────────────────────── */
+    .screen{display:none;width:100%;max-width:480px;min-height:100vh;flex-direction:column;}
+    .screen.active{display:flex;}
+
+    /* ── BORDER STRIP ──────────────────────────────── */
+    .border-strip{
+      width:100%;height:10px;flex-shrink:0;
+      background:repeating-linear-gradient(
+        90deg,var(--gold-border2) 0,var(--gold) 2px,
+        var(--gold-border2) 4px,transparent 4px,transparent 12px);
+      position:relative;
+    }
+    .border-strip::after{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(90deg,transparent,rgba(201,168,76,.5),transparent);
+    }
+
+    /* ── LANTERNS ──────────────────────────────────── */
+    .lanterns-row{
+      width:100%;display:flex;justify-content:space-around;
+      align-items:flex-start;padding:0 16px;height:110px;overflow:hidden;
+    }
+    .lantern-wrap{
+      display:flex;flex-direction:column;align-items:center;
+      animation:sway 4s ease-in-out infinite;transform-origin:top center;
+    }
+    .lantern-wrap:nth-child(2){animation-delay:.6s;margin-top:10px;}
+    .lantern-wrap:nth-child(3){animation-delay:1.2s;}
+    .lantern-wrap:nth-child(4){animation-delay:.3s;margin-top:14px;}
+    .lantern-wrap:nth-child(5){animation-delay:.9s;}
+    @keyframes sway{0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);}}
+    .lantern-rope{width:1px;background:var(--gold);opacity:.4;margin:0 auto;}
+    .lantern-svg{filter:drop-shadow(0 0 6px rgba(201,168,76,.5));}
+
+    /* ── HEADER ────────────────────────────────────── */
+    .header-ornament{
+      text-align:center;font-size:11px;letter-spacing:6px;
+      color:var(--gold);opacity:.6;padding:8px 0 2px;text-transform:uppercase;
+    }
+
+    /* ── TITLE CARD ────────────────────────────────── */
+    .title-card{
+      margin:0 20px;padding:16px 20px 20px;
+      background:var(--card);border:1px solid var(--gold-border2);
+      border-radius:20px;text-align:center;position:relative;
+      box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 60px rgba(138,99,210,.15);
+    }
+    .title-card::before{
+      content:'';position:absolute;top:-1px;left:20px;right:20px;height:2px;
+      background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    }
+    .app-arabic{
+      font-size:38px;color:var(--gold-light);letter-spacing:2px;line-height:1.1;
+      text-shadow:0 0 30px rgba(232,201,109,.4),0 2px 4px rgba(0,0,0,.6);margin-bottom:4px;
+    }
+    .app-title{font-size:11px;font-weight:400;letter-spacing:4px;text-transform:uppercase;color:var(--gold);opacity:.8;margin-bottom:6px;}
+    .app-subtitle{font-size:12px;color:var(--muted);font-style:italic;letter-spacing:1px;}
+
+    /* ── GOLD DIVIDER ──────────────────────────────── */
+    .gold-divider{display:flex;align-items:center;gap:10px;margin:18px 20px 14px;}
+    .gold-divider::before,.gold-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-border2),transparent);}
+    .gold-divider span{font-size:14px;color:var(--gold);opacity:.6;}
+
+    /* ── MENU BUTTONS ──────────────────────────────── */
+    .menu-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;flex:1;}
+    .menu-btn{
+      width:100%;display:flex;align-items:center;gap:14px;
+      padding:15px 18px;border-radius:14px;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--text);font-size:15px;
+      font-family:inherit;letter-spacing:.5px;
+      transition:background .15s,border-color .15s,transform .08s;position:relative;overflow:hidden;
+    }
+    .menu-btn::after{
+      content:'';position:absolute;right:16px;top:50%;
+      width:6px;height:6px;border-top:1.5px solid var(--gold);border-right:1.5px solid var(--gold);
+      transform:translateY(-50%) rotate(45deg);opacity:.5;
+    }
+    .menu-btn:active{transform:scale(.98);}
+    .menu-btn:hover{background:rgba(32,28,66,.9);border-color:var(--gold-border2);}
+    .menu-btn.primary{
+      background:linear-gradient(135deg,#2d6a4f 0%,#1a4a35 100%);
+      border-color:rgba(52,211,153,.35);box-shadow:0 4px 20px rgba(34,197,94,.15);
+    }
+    .menu-btn.primary:hover{background:linear-gradient(135deg,#3a7d5e 0%,#225a42 100%);}
+    .menu-btn.primary .btn-icon{color:#4ade80;}
+    .btn-icon{font-size:22px;width:32px;text-align:center;flex-shrink:0;color:var(--gold-light);}
+    .btn-label{flex:1;font-weight:600;text-align:left;}
+    .btn-badge{font-size:11px;padding:3px 8px;border-radius:99px;background:var(--gold-dim);color:var(--gold-light);font-weight:600;}
+
+    /* ── FOOTER ────────────────────────────────────── */
+    .footer-ornament{text-align:center;padding:20px 0 24px;color:var(--gold);opacity:.35;font-size:20px;letter-spacing:8px;}
+
+    /* ── SCREEN HEADER ─────────────────────────────── */
+    .screen-header{padding:20px 20px 0;display:flex;align-items:center;gap:12px;}
+    .back-btn{
+      width:40px;height:40px;border-radius:12px;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--gold);font-size:18px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .screen-title{font-size:18px;color:var(--gold-light);letter-spacing:1px;}
+
+    /* ── NAME SCREEN ───────────────────────────────── */
+    .mode-row{display:flex;gap:10px;padding:16px 20px 0;}
+    .mode-btn{
+      flex:1;padding:13px;border-radius:14px;border:1.5px solid var(--gold-border);
+      background:var(--surface);color:var(--muted);font-size:14px;
+      font-family:inherit;font-weight:600;letter-spacing:.5px;transition:all .15s;
+    }
+    .mode-btn.active{border-color:var(--gold);background:var(--gold-dim);color:var(--gold-light);}
+    .input-group{padding:14px 20px 0;}
+    .input-label{font-size:12px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+    .text-input{
+      width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--text);font-size:16px;font-family:inherit;
+      outline:none;margin-bottom:10px;transition:border-color .15s;
+    }
+    .text-input:focus{border-color:var(--gold);}
+    .text-input::placeholder{color:var(--muted);opacity:.7;}
+
+    /* Clock picker chips */
+    .clock-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+    .clock-chip{
+      padding:8px 14px;border-radius:99px;border:1.5px solid var(--gold-border);
+      background:var(--surface);color:var(--muted);font-size:13px;font-family:inherit;
+      font-weight:600;cursor:pointer;transition:all .15s;
+    }
+    .clock-chip.active{border-color:var(--gold);background:var(--gold-dim);color:var(--gold-light);}
+
+    .custom-clock-row{display:flex;align-items:center;gap:10px;margin-top:10px;}
+    .custom-clock-row input{
+      width:70px;padding:10px 12px;border-radius:12px;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--text);font-size:16px;font-family:inherit;
+      outline:none;text-align:center;
+    }
+    .custom-clock-row input:focus{border-color:var(--gold);}
+    .custom-clock-row span{color:var(--muted);font-size:13px;}
+
+    .cta-btn{
+      display:block;width:calc(100% - 40px);margin:20px 20px 0;padding:16px;
+      border-radius:16px;border:1px solid rgba(52,211,153,.4);
+      background:linear-gradient(135deg,#2d6a4f 0%,#1a4a35 100%);
+      color:#fff;font-size:16px;font-family:inherit;font-weight:700;
+      letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+      box-shadow:0 4px 20px rgba(34,197,94,.2);transition:transform .08s,filter .12s;
+    }
+    .cta-btn:active{transform:scale(.98);}
+
+    /* ════════════════════════════════════════════════
+       GAME SCREEN
+    ════════════════════════════════════════════════ */
+    #gameScreen{max-width:520px;}
+
+    /* Game top bar */
+    .game-topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px 0;gap:8px;
+    }
+    .game-back-btn{
+      width:36px;height:36px;border-radius:10px;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--gold);font-size:16px;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+
+    /* ── SCOREBOARD ────────────────────────────────── */
+    .scoreboard{
+      margin:10px 14px 0;
+      background:var(--sb-bg);
+      border:1.5px solid var(--gold-border2);
+      border-radius:18px;
+      padding:12px 14px 14px;
+      box-shadow:0 4px 24px rgba(0,0,0,.5),inset 0 1px 0 rgba(201,168,76,.12);
+    }
+    /* game clock */
+    .game-clock-wrap{
+      display:flex;align-items:center;justify-content:center;
+      gap:8px;margin-bottom:10px;
+    }
+    .clock-label{font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;opacity:.6;}
+    .clock-display{
+      font-size:26px;font-weight:900;color:var(--gold-light);
+      font-variant-numeric:tabular-nums;letter-spacing:2px;
+      text-shadow:0 0 16px rgba(232,201,109,.4);
+    }
+    .clock-display.warn{color:#facc15;text-shadow:0 0 16px rgba(250,204,21,.5);}
+    .clock-display.danger{color:#fb7185;text-shadow:0 0 16px rgba(251,113,133,.6);}
+
+    /* score teams */
+    .score-teams{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+    .score-team{flex:1;text-align:center;padding:6px 4px;}
+    .score-team-name{
+      font-size:11px;font-weight:700;color:rgba(201,168,76,.55);
+      letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .score-number{
+      font-size:48px;font-weight:900;color:var(--gold-light);line-height:1;
+      font-variant-numeric:tabular-nums;
+      text-shadow:0 0 16px rgba(245,208,98,.25);
+      transition:color .2s;
+    }
+    .score-team.active-team .score-number{color:#fff;text-shadow:0 0 24px rgba(255,255,200,.5);}
+    .score-team.active-team .score-team-name{color:var(--gold-light);}
+    .score-divider{
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      padding:0 4px;
+    }
+    .score-vs{font-size:14px;font-weight:900;color:rgba(201,168,76,.4);}
+    .score-round{font-size:10px;color:rgba(201,168,76,.5);letter-spacing:.5px;text-transform:uppercase;}
+    .score-plen{font-size:11px;color:rgba(201,168,76,.4);}
+    /* active dot */
+    .active-dot{
+      display:inline-block;width:7px;height:7px;border-radius:50%;
+      background:#4ade80;box-shadow:0 0 6px #4ade80;
+      margin-right:5px;animation:blink 1.2s infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+    /* ── GAME STATUS ───────────────────────────────── */
+    .game-status{
+      margin:10px 14px 0;padding:11px 14px;
+      border:1px solid var(--gold-border);border-radius:12px;
+      background:rgba(7,6,26,.5);font-size:14px;line-height:1.4;color:var(--text);
+      min-height:46px;
+    }
+    .good{color:#4ade80;font-weight:700;}
+    .bad{color:#fb7185;font-weight:700;}
+
+    /* ── PATTERN PADS ──────────────────────────────── */
+    .pads-row{display:flex;gap:8px;margin:10px 14px 0;}
+    .pad{
+      flex:1;padding:18px 0;font-size:26px;font-weight:700;
+      border-radius:14px;border:1.5px solid var(--gold-border);
+      background:var(--surface);color:var(--text);
+      cursor:pointer;transition:background .08s,transform .05s;
+      font-family:inherit;
+    }
+    .pad:active{transform:scale(.95);}
+    .pad.flash{
+      background:linear-gradient(135deg,#c9a84c,#e8c96d);
+      border-color:#e8c96d;color:#07061a;
+      box-shadow:0 0 20px rgba(201,168,76,.55);
+    }
+    .pad:disabled{opacity:.35;cursor:not-allowed;}
+    @media(max-width:400px){.pad{font-size:22px;padding:16px 0;}}
+
+    /* ── CONTROLS ROW ──────────────────────────────── */
+    .game-controls{
+      display:flex;gap:8px;margin:10px 14px 0;flex-wrap:wrap;align-items:center;
+    }
+    .ctrl-btn{
+      padding:9px 14px;border-radius:10px;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--text);font-size:13px;
+      font-family:inherit;font-weight:600;cursor:pointer;
+      transition:background .1s,transform .05s;
+    }
+    .ctrl-btn:active{transform:scale(.97);}
+    .ctrl-btn:hover{background:rgba(32,28,66,.9);}
+    .ctrl-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .pill-select{
+      display:inline-flex;align-items:center;gap:6px;padding:8px 10px;
+      border-radius:10px;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--muted);font-size:12px;
+    }
+    .pill-select select{
+      padding:3px 6px;border-radius:8px;border:1px solid var(--gold-border);
+      background:var(--sb-bg);color:var(--text);font-size:12px;font-family:inherit;outline:none;
+    }
+    .pill-select input{
+      width:44px;padding:3px 6px;border-radius:8px;border:1px solid var(--gold-border);
+      background:var(--sb-bg);color:var(--text);font-size:12px;font-family:inherit;
+      outline:none;text-align:center;
+    }
+
+    /* ── RULES ─────────────────────────────────────── */
+    .rules-panel{
+      margin:10px 14px 14px;padding:10px 12px;
+      border:1px solid var(--gold-border);border-radius:12px;
+      background:rgba(7,6,26,.4);font-size:12px;color:var(--muted);line-height:1.7;
+    }
+
+    /* ════════════════════════════════════════════════
+       COUNTDOWN OVERLAY
+    ════════════════════════════════════════════════ */
+    .countdown-overlay{
+      position:fixed;inset:0;background:rgba(7,6,26,.92);
+      display:flex;align-items:center;justify-content:center;flex-direction:column;
+      z-index:8888;
+    }
+    .countdown-overlay.hidden{display:none;}
+    .cd-team{font-size:15px;font-weight:700;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;}
+    .cd-num{font-size:100px;font-weight:900;color:var(--gold-light);line-height:1;text-shadow:0 0 50px rgba(232,201,109,.5);}
+    .cd-sub{font-size:14px;color:rgba(201,168,76,.55);margin-top:12px;letter-spacing:2px;}
+
+    /* ════════════════════════════════════════════════
+       GAME OVER OVERLAY
+    ════════════════════════════════════════════════ */
+    .gameover-overlay{
+      position:fixed;inset:0;background:rgba(7,6,26,.95);
+      display:flex;align-items:center;justify-content:center;flex-direction:column;
+      z-index:8889;padding:24px;
+    }
+    .gameover-overlay.hidden{display:none;}
+    .go-title{font-size:13px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+    .go-winner{font-size:32px;font-weight:900;color:var(--gold-light);text-align:center;margin-bottom:6px;}
+    .go-scores{
+      display:flex;gap:20px;margin:16px 0;
+    }
+    .go-score-box{
+      text-align:center;padding:16px 24px;border-radius:16px;
+      border:1px solid var(--gold-border);background:var(--surface);
+    }
+    .go-score-name{font-size:12px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+    .go-score-num{font-size:40px;font-weight:900;color:var(--gold-light);}
+    .go-score-box.winner-box{border-color:var(--gold);background:var(--gold-dim);}
+    .go-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center;}
+    .go-btn{
+      padding:13px 22px;border-radius:14px;font-size:14px;font-family:inherit;
+      font-weight:700;cursor:pointer;border:1px solid var(--gold-border);
+      background:var(--surface);color:var(--text);transition:background .12s;
+    }
+    .go-btn.primary{background:linear-gradient(135deg,#2d6a4f,#1a4a35);border-color:rgba(52,211,153,.4);color:#fff;}
+
+    /* ════════════════════════════════════════════════
+       JEOPARDY OVERLAY
+    ════════════════════════════════════════════════ */
+    .jq{
+      position:fixed;inset:0;background:rgba(7,6,26,.93);
+      display:flex;align-items:center;justify-content:center;
+      padding:14px;z-index:9999;
+    }
+    .jq.hidden{display:none;}
+    .jqWrap{
+      width:min(820px,96vw);background:var(--card);
+      border:1.5px solid var(--gold-border2);border-radius:20px;padding:18px;
+      box-shadow:0 14px 40px rgba(0,0,0,.6);
+    }
+    .jqTop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+    .jqMeta{display:flex;flex-direction:column;gap:4px;}
+    .jqTitle{font-weight:800;color:var(--text);font-size:14px;}
+    .jqDiff{
+      display:inline-block;font-size:11px;font-weight:600;
+      padding:3px 10px;border-radius:99px;
+      background:var(--gold-dim);color:var(--gold-light);letter-spacing:.5px;
+    }
+    .jqTimer{
+      width:54px;height:54px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:20px;font-weight:900;flex-shrink:0;
+      border:2.5px solid var(--gold-border2);background:var(--sb-bg);color:var(--gold-light);
+    }
+    .jqTimer.warn{border-color:#facc15;color:#facc15;}
+    .jqTimer.danger{border-color:#fb7185;color:#fb7185;transform:scale(1.05);}
+    .jqQ{font-size:18px;line-height:1.35;font-weight:700;margin:12px 0 14px;color:var(--text);}
+    .jqAns{display:grid;grid-template-columns:1fr;gap:9px;}
+    @media(min-width:560px){.jqAns{grid-template-columns:1fr 1fr;}}
+    .jqAns button{
+      text-align:left;padding:14px;border-radius:14px;
+      border:1.5px solid var(--gold-border);background:var(--surface);
+      color:var(--text);font-size:15px;font-family:inherit;cursor:pointer;
+      transition:background .1s,border-color .1s;
+    }
+    .jqAns button:hover:not(:disabled){background:rgba(32,28,66,.9);border-color:var(--gold-border2);}
+    .jqAns button:disabled{opacity:.5;cursor:not-allowed;}
+    .jqAns button.correct{background:rgba(74,222,128,.12);border-color:#4ade80;color:#4ade80;}
+    .jqAns button.wrong{background:rgba(251,113,133,.1);border-color:#fb7185;color:#fb7185;}
+    .jqMsg{color:var(--muted);font-size:13px;margin-top:10px;}
+    .jqExplain{
+      margin-top:10px;padding:11px 13px;border:1px solid var(--gold-border);
+      border-radius:12px;background:rgba(7,6,26,.5);
+      color:var(--text);font-size:13px;line-height:1.45;
+    }
+    .jqExplain.hidden{display:none;}
+
+    /* ════════════════════════════════════════════════
+       SUB-SCREENS
+    ════════════════════════════════════════════════ */
+    .sub-body{padding:16px 20px;flex:1;}
+    .surah-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+    .surah-item{
+      display:flex;align-items:center;gap:14px;padding:13px 16px;
+      border-radius:14px;border:1px solid var(--gold-border);background:var(--surface);
+    }
+    .surah-num{
+      width:32px;height:32px;border-radius:50%;border:1px solid var(--gold-border2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:700;color:var(--gold-light);flex-shrink:0;
+    }
+    .surah-name{font-size:14px;font-weight:600;color:var(--text);flex:1;}
+    .surah-arabic{font-size:16px;color:var(--gold-light);}
+    .surah-lock{font-size:14px;color:var(--muted);opacity:.5;}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    .stat-card{padding:16px;border-radius:14px;border:1px solid var(--gold-border);background:var(--surface);text-align:center;}
+    .stat-num{font-size:32px;font-weight:800;color:var(--gold-light);line-height:1;}
+    .stat-label{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.5px;text-transform:uppercase;}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--gold-border);}
+    /* toggle switch */
+    .toggle-wrap{display:flex;align-items:center;gap:8px;}
+    .toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;position:absolute;}
+    .toggle-track{
+      position:absolute;inset:0;border-radius:99px;
+      background:var(--surface);border:1.5px solid var(--gold-border);
+      cursor:pointer;transition:background .2s,border-color .2s;
+    }
+    .toggle input:checked+.toggle-track{background:var(--gold-dim);border-color:var(--gold);}
+    .toggle-track::after{
+      content:"";position:absolute;top:3px;left:3px;
+      width:16px;height:16px;border-radius:50%;
+      background:var(--muted);transition:transform .2s,background .2s;
+    }
+    .toggle input:checked+.toggle-track::after{transform:translateX(20px);background:var(--gold-light);}
+    .toggle-emoji{font-size:16px;}
+    .setting-label{font-size:14px;color:var(--text);}
+    .setting-val{font-size:13px;color:var(--gold);}
+    .letters-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+    .letter-cell{
+      aspect-ratio:1;border-radius:14px;border:1px solid var(--gold-border);
+      background:var(--surface);display:flex;align-items:center;justify-content:center;
+      font-size:24px;font-weight:700;color:var(--text);cursor:pointer;
+      transition:background .12s,border-color .12s;
+    }
+    .letter-cell:hover{background:var(--gold-dim);border-color:var(--gold);}
+    .lb-entry{
+      padding:10px 0;border-bottom:1px solid var(--gold-border);
+      display:flex;justify-content:space-between;font-size:13px;
+    }
+
+    /* ── HADITH CARD ──────────────────────────────── */
+    .hadith-card{
+      margin:0 20px;padding:14px 16px;
+      background:var(--card);border:1px solid var(--gold-border);
+      border-radius:16px;position:relative;overflow:hidden;
+    }
+    .hadith-card::before{
+      content:'"';position:absolute;top:-10px;left:8px;
+      font-size:90px;color:var(--gold);opacity:.07;font-family:Georgia,serif;line-height:1;
+      pointer-events:none;
+    }
+    .hadith-label{font-size:10px;letter-spacing:2px;color:var(--gold);opacity:.65;text-transform:uppercase;margin-bottom:6px;}
+    .hadith-text{font-size:13px;color:var(--text);line-height:1.6;font-style:italic;}
+    .hadith-source{font-size:11px;color:var(--gold);opacity:.5;margin-top:6px;}
+
+    /* ── PRAYER WIDGET ────────────────────────────── */
+    .prayer-widget{
+      margin:10px 20px 0;padding:10px 14px 12px;
+      background:var(--card);border:1px solid var(--gold-border);
+      border-radius:14px;
+    }
+    .prayer-widget-label{font-size:10px;letter-spacing:2px;color:var(--gold);opacity:.6;text-transform:uppercase;margin-bottom:8px;}
+    .prayer-row{display:flex;justify-content:space-between;gap:4px;}
+    .prayer-item{text-align:center;flex:1;}
+    .prayer-name{font-size:9px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin-bottom:2px;}
+    .prayer-time{font-size:12px;font-weight:700;color:var(--text);}
+    .prayer-time.next-prayer{color:var(--gold-light);text-shadow:0 0 8px rgba(232,201,109,.3);}
+    .prayer-loc{font-size:10px;color:var(--muted);margin-top:5px;opacity:.6;}
+
+    /* ── QIBLA WIDGET ─────────────────────────────── */
+    .qibla-widget{
+      margin:10px 20px 0;padding:14px 16px;
+      background:var(--card);border:1px solid var(--gold-border);
+      border-radius:14px;display:flex;align-items:center;gap:16px;
+    }
+    .qibla-compass{width:76px;height:76px;flex-shrink:0;}
+    .qibla-info{flex:1;}
+    .qibla-label{font-size:10px;letter-spacing:2px;color:var(--gold);opacity:.65;text-transform:uppercase;margin-bottom:5px;}
+    .qibla-deg{font-size:24px;font-weight:800;color:var(--gold-light);line-height:1;}
+    .qibla-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+    /* ── 99 NAMES SCREEN ──────────────────────────── */
+    .names-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+    .name-item{
+      display:flex;align-items:center;gap:12px;padding:11px 14px;
+      border-radius:12px;border:1px solid var(--gold-border);background:var(--surface);
+    }
+    .name-num{
+      width:26px;height:26px;border-radius:50%;border:1px solid var(--gold-border2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;color:var(--gold-light);flex-shrink:0;
+    }
+    .name-body{flex:1;}
+    .name-transliteration{font-size:13px;font-weight:700;color:var(--text);}
+    .name-meaning{font-size:11px;color:var(--muted);margin-top:1px;}
+    .name-arabic{font-size:18px;color:var(--gold-light);flex-shrink:0;}
+
+    /* ── AUDIO BUTTON ─────────────────────────────── */
+    .audio-btn{
+      width:30px;height:30px;border-radius:50%;border:1px solid var(--gold-border);
+      background:var(--sb-bg);color:var(--gold);font-size:12px;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;flex-shrink:0;transition:background .1s,border-color .1s;
+      font-family:inherit;
+    }
+    .audio-btn:hover{background:var(--gold-dim);border-color:var(--gold);}
+    .audio-btn.playing{border-color:var(--gold-light);background:var(--gold-dim);color:var(--gold-light);}
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     MENU SCREEN
+══════════════════════════════════════════════════ -->
+<div id="menuScreen" class="screen active">
+  <div class="border-strip"></div>
+  <div style="background:linear-gradient(180deg,rgba(15,13,37,0) 0%,rgba(26,23,56,.6) 100%);">
+    <div class="lanterns-row">
+      <div class="lantern-wrap">
+        <div class="lantern-rope" style="height:18px"></div>
+        <svg class="lantern-svg" width="26" height="44" viewBox="0 0 28 44" fill="none">
+          <rect x="10" y="0" width="8" height="4" rx="2" fill="#c9a84c"/>
+          <path d="M4 8 Q14 6 24 8 L22 34 Q14 38 6 34 Z" fill="#c9a84c" opacity=".85"/>
+          <path d="M6 14 Q14 12 22 14" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <path d="M5 22 Q14 20 23 22" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <path d="M6 30 Q14 28 22 30" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <ellipse cx="14" cy="36" rx="6" ry="3" fill="#c9a84c" opacity=".7"/>
+          <rect x="12" y="38" width="4" height="4" rx="1" fill="#c9a84c" opacity=".6"/>
+          <circle cx="14" cy="22" r="4" fill="#fffbe6" opacity=".2"/>
+        </svg>
+      </div>
+      <div class="lantern-wrap">
+        <div class="lantern-rope" style="height:10px"></div>
+        <svg class="lantern-svg" width="32" height="48" viewBox="0 0 28 44" fill="none">
+          <rect x="10" y="0" width="8" height="4" rx="2" fill="#c9a84c"/>
+          <path d="M3 9 Q14 6 25 9 L23 36 Q14 40 5 36 Z" fill="#c9a84c" opacity=".9"/>
+          <path d="M5 16 Q14 13 23 16" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <path d="M4 24 Q14 21 24 24" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <path d="M5 32 Q14 29 23 32" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <ellipse cx="14" cy="38" rx="7" ry="3" fill="#c9a84c" opacity=".7"/>
+          <rect x="11" y="40" width="6" height="4" rx="1" fill="#c9a84c" opacity=".6"/>
+          <circle cx="14" cy="24" r="5" fill="#fffbe6" opacity=".18"/>
+        </svg>
+      </div>
+      <div class="lantern-wrap" style="margin-top:-8px">
+        <div class="lantern-rope" style="height:28px"></div>
+        <svg class="lantern-svg" width="22" height="40" viewBox="0 0 28 44" fill="none">
+          <rect x="10" y="0" width="8" height="4" rx="2" fill="#c9a84c"/>
+          <path d="M5 8 Q14 6 23 8 L21 33 Q14 37 7 33 Z" fill="#c9a84c" opacity=".75"/>
+          <ellipse cx="14" cy="35" rx="5" ry="2.5" fill="#c9a84c" opacity=".6"/>
+          <circle cx="14" cy="20" r="3.5" fill="#fffbe6" opacity=".18"/>
+        </svg>
+      </div>
+      <div class="lantern-wrap">
+        <div class="lantern-rope" style="height:16px"></div>
+        <svg class="lantern-svg" width="30" height="46" viewBox="0 0 28 44" fill="none">
+          <rect x="10" y="0" width="8" height="4" rx="2" fill="#c9a84c"/>
+          <path d="M4 8 Q14 6 24 8 L22 34 Q14 38 6 34 Z" fill="#c9a84c" opacity=".85"/>
+          <path d="M6 15 Q14 12 22 15" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <path d="M5 23 Q14 20 23 23" stroke="#e8c96d" stroke-width=".8" opacity=".5"/>
+          <ellipse cx="14" cy="36" rx="6" ry="3" fill="#c9a84c" opacity=".7"/>
+          <rect x="12" y="38" width="4" height="4" rx="1" fill="#c9a84c" opacity=".6"/>
+          <circle cx="14" cy="22" r="4" fill="#fffbe6" opacity=".22"/>
+        </svg>
+      </div>
+      <div class="lantern-wrap" style="margin-top:4px">
+        <div class="lantern-rope" style="height:12px"></div>
+        <svg class="lantern-svg" width="24" height="42" viewBox="0 0 28 44" fill="none">
+          <rect x="10" y="0" width="8" height="4" rx="2" fill="#c9a84c"/>
+          <path d="M5 8 Q14 6 23 8 L21 33 Q14 37 7 33 Z" fill="#c9a84c" opacity=".8"/>
+          <ellipse cx="14" cy="35" rx="5" ry="2.5" fill="#c9a84c" opacity=".65"/>
+          <circle cx="14" cy="20" r="3" fill="#fffbe6" opacity=".18"/>
+        </svg>
+      </div>
+    </div>
+    <div class="header-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+  </div>
+
+  <div class="title-card">
+    <div class="app-arabic">قُرْآن كِوِسْت</div>
+    <div class="app-title">Qur'an Quest</div>
+    <div class="app-subtitle"></div>
+  </div>
+
+  <div class="gold-divider"><span>✦</span></div>
+
+  <!-- Hadith of the Day -->
+  <div class="hadith-card">
+    <div class="hadith-label">Hadith of the Day</div>
+    <div class="hadith-text" id="hadithText">Loading…</div>
+    <div class="hadith-source" id="hadithSource"></div>
+  </div>
+
+  <!-- Prayer Times -->
+  <div class="prayer-widget" id="prayerWidget" style="display:none">
+    <div class="prayer-widget-label">🕌 Prayer Times</div>
+    <div class="prayer-row" id="prayerRow"></div>
+    <div class="prayer-loc" id="prayerLoc"></div>
+  </div>
+
+  <!-- Qibla Direction -->
+  <div class="qibla-widget" id="qiblaWidget" style="display:none">
+    <svg class="qibla-compass" viewBox="0 0 76 76">
+      <circle cx="38" cy="38" r="36" fill="#07061a" stroke="rgba(201,168,76,.35)" stroke-width="1.5"/>
+      <!-- tick marks -->
+      <line x1="38" y1="4" x2="38" y2="10" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/>
+      <line x1="38" y1="66" x2="38" y2="72" stroke="rgba(201,168,76,.25)" stroke-width="1"/>
+      <line x1="4" y1="38" x2="10" y2="38" stroke="rgba(201,168,76,.25)" stroke-width="1"/>
+      <line x1="66" y1="38" x2="72" y2="38" stroke="rgba(201,168,76,.25)" stroke-width="1"/>
+      <!-- cardinal labels -->
+      <text x="38" y="20" text-anchor="middle" fill="#c9a84c" font-size="9" font-family="Georgia" font-weight="700">N</text>
+      <text x="38" y="62" text-anchor="middle" fill="rgba(201,168,76,.35)" font-size="8" font-family="Georgia">S</text>
+      <text x="60" y="41" text-anchor="middle" fill="rgba(201,168,76,.35)" font-size="8" font-family="Georgia">E</text>
+      <text x="16" y="41" text-anchor="middle" fill="rgba(201,168,76,.35)" font-size="8" font-family="Georgia">W</text>
+      <!-- needle group — rotated by JS -->
+      <g id="qiblaNeedle" style="transform-origin:38px 38px;transform:rotate(0deg)">
+        <polygon points="38,8 35,38 38,34 41,38" fill="#e8c96d" opacity=".95"/>
+        <polygon points="38,68 35,38 38,42 41,38" fill="rgba(201,168,76,.2)"/>
+        <circle cx="38" cy="38" r="4" fill="#c9a84c" stroke="#07061a" stroke-width="2"/>
+        <text x="38" y="6" text-anchor="middle" fill="#c9a84c" font-size="7" font-family="sans-serif">✦</text>
+      </g>
+    </svg>
+    <div class="qibla-info">
+      <div class="qibla-label">🧭 Qibla Direction</div>
+      <div class="qibla-deg" id="qiblaDeg">—°</div>
+      <div class="qibla-sub" id="qiblaSub">Toward Mecca · New York</div>
+    </div>
+  </div>
+
+  <div class="gold-divider" style="margin-top:14px"><span>✦</span></div>
+
+  <nav class="menu-list">
+    <button class="menu-btn primary" onclick="go('nameScreen')">
+      <span class="btn-icon">🕌</span>
+      <span class="btn-label">Start Game</span>
+      <span class="btn-badge">PLAY</span>
+    </button>
+    <button class="menu-btn" onclick="go('surahScreen')">
+      <span class="btn-icon">📖</span>
+      <span class="btn-label">Surahs</span>
+      <span class="btn-badge">114</span>
+    </button>
+    <button class="menu-btn" onclick="go('progressScreen');renderProgress()">
+      <span class="btn-icon">🏆</span>
+      <span class="btn-label">Progress</span>
+    </button>
+    <button class="menu-btn" onclick="go('lettersScreen')">
+      <span class="btn-icon">ا</span>
+      <span class="btn-label">Arabic Letters</span>
+    </button>
+    <button class="menu-btn" onclick="go('namesScreen')">
+      <span class="btn-icon">✨</span>
+      <span class="btn-label">99 Names of Allah</span>
+    </button>
+    <button class="menu-btn" onclick="go('settingsScreen')">
+      <span class="btn-icon">⚙️</span>
+      <span class="btn-label">Settings</span>
+    </button>
+  </nav>
+  <div class="footer-ornament">☽ &nbsp; ✦ &nbsp; ☾</div>
+  <div class="border-strip" style="margin-top:auto"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     NAME / MODE SCREEN
+══════════════════════════════════════════════════ -->
+<div id="nameScreen" class="screen">
+  <div class="border-strip"></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <div class="screen-title">Who's Playing?</div>
+  </div>
+  <div class="gold-divider" style="margin-top:16px"><span>✦</span></div>
+
+  <div class="mode-row">
+    <button class="mode-btn active" id="modeBtnSingle" onclick="setMode('single')">👤 Solo</button>
+    <button class="mode-btn"        id="modeBtnTwo"    onclick="setMode('two')">👥 2 Teams</button>
+  </div>
+
+  <div id="singleFields" class="input-group">
+    <div class="input-label">Your Name</div>
+    <input class="text-input" id="singleNameInput" maxlength="16" placeholder="e.g. Musa"/>
+  </div>
+  <div id="twoFields" class="input-group" style="display:none">
+    <div class="input-label">Team A</div>
+    <input class="text-input" id="teamAInput" maxlength="16" placeholder="Team A name"/>
+    <div class="input-label">Team B</div>
+    <input class="text-input" id="teamBInput" maxlength="16" placeholder="Team B name"/>
+  </div>
+
+  <!-- Game clock -->
+  <div class="input-group">
+    <div class="input-label">Game Clock</div>
+    <div class="clock-chips">
+      <button class="clock-chip" onclick="setClockPreset(1)">1 min</button>
+      <button class="clock-chip" onclick="setClockPreset(3)">3 min</button>
+      <button class="clock-chip active" id="chip5" onclick="setClockPreset(5)">5 min</button>
+      <button class="clock-chip" onclick="setClockPreset(10)">10 min</button>
+    </div>
+    <div class="custom-clock-row">
+      <input type="number" id="clockMinInput" value="5" min="1" max="60" oninput="onClockInput()"/>
+      <span>minutes custom</span>
+    </div>
+  </div>
+
+  <!-- Q timer -->
+  <div class="input-group">
+    <div class="input-label">Question Timer</div>
+    <div class="clock-chips">
+      <button class="clock-chip" onclick="setQPreset(10)">10s</button>
+      <button class="clock-chip active" id="qchip15" onclick="setQPreset(15)">15s</button>
+      <button class="clock-chip" onclick="setQPreset(20)">20s</button>
+      <button class="clock-chip" onclick="setQPreset(30)">30s</button>
+    </div>
+  </div>
+
+  <button class="cta-btn" onclick="startGame()">Let's Go →</button>
+  <div class="footer-ornament" style="margin-top:auto">✦</div>
+  <div class="border-strip"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     GAME SCREEN
+══════════════════════════════════════════════════ -->
+<div id="gameScreen" class="screen">
+  <div class="border-strip"></div>
+
+  <div class="game-topbar">
+    <button class="game-back-btn" onclick="confirmLeave()">‹</button>
+    <div style="font-size:11px;color:var(--gold);letter-spacing:2px;opacity:.6;text-transform:uppercase">Qur'an Quest</div>
+    <div style="width:36px"></div>
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <div class="game-clock-wrap">
+      <span class="clock-label">Time</span>
+      <span class="clock-display" id="clockDisplay">05:00</span>
+    </div>
+    <div class="score-teams">
+      <div class="score-team" id="scoreTeamA">
+        <div class="score-team-name" id="scoreNameA">Team A</div>
+        <div class="score-number" id="scoreNumA">0</div>
+      </div>
+      <div class="score-divider">
+        <div class="score-vs">VS</div>
+        <div class="score-round">Rnd <span id="roundNum">1</span></div>
+        <div class="score-plen">Pat <span id="patLen">2</span></div>
+      </div>
+      <div class="score-team" id="scoreTeamB">
+        <div class="score-team-name" id="scoreNameB">Team B</div>
+        <div class="score-number" id="scoreNumB">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="game-controls">
+    <button id="startBtn" class="ctrl-btn" onclick="startMatch()">▶ Start</button>
+    <button id="resetBtn" class="ctrl-btn" onclick="resetMatch()">↺ Reset</button>
+    <span class="pill-select">
+      Difficulty
+      <select id="diffSelect">
+        <option value="auto">Auto</option>
+        <option value="Easy">Easy</option>
+        <option value="Medium">Medium</option>
+        <option value="Hard">Hard</option>
+      </select>
+    </span>
+  </div>
+
+  <!-- Status -->
+  <div class="game-status" id="gameStatus">Press <b>▶ Start</b> to begin.</div>
+
+  <!-- Pads -->
+  <div class="pads-row">
+    <button class="pad" data-n="1">1</button>
+    <button class="pad" data-n="2">2</button>
+    <button class="pad" data-n="3">3</button>
+    <button class="pad" data-n="4">▲</button>
+    <button class="pad" data-n="5">●</button>
+  </div>
+
+  <!-- Rules -->
+  <div class="rules-panel">
+    ✅ Watch the pattern → tap each button in order.<br>
+    ✅ Correct pattern → timed trivia question → earn points.<br>
+    ❌ Mistake or wrong answer → 0 pts, opponent's turn.<br>
+    ⏳ Question timeout → 0 pts, turn switches.
+  </div>
+
+  <div class="border-strip" style="margin-top:auto"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SUB-SCREENS
+══════════════════════════════════════════════════ -->
+<div id="surahScreen" class="screen">
+  <div class="border-strip"></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <div class="screen-title">📖 Surahs</div>
+  </div>
+  <div class="sub-body">
+    <div class="surah-list" id="surahList"></div>
+  </div>
+  <div class="border-strip" style="margin-top:auto"></div>
+</div>
+
+<div id="progressScreen" class="screen">
+  <div class="border-strip"></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <div class="screen-title">🏆 Progress</div>
+  </div>
+  <div class="sub-body">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="statGames">0</div><div class="stat-label">Games</div></div>
+      <div class="stat-card"><div class="stat-num" id="statBest">0</div><div class="stat-label">Best Score</div></div>
+      <div class="stat-card"><div class="stat-num" id="statCorrect">0</div><div class="stat-label">Correct Ans.</div></div>
+      <div class="stat-card"><div class="stat-num" id="statRounds">0</div><div class="stat-label">Rounds Played</div></div>
+    </div>
+    <div class="gold-divider" style="margin-top:20px"><span>Recent</span></div>
+    <div id="leaderboardList" style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">No games yet.</div>
+  </div>
+  <div class="border-strip" style="margin-top:auto"></div>
+</div>
+
+<div id="lettersScreen" class="screen">
+  <div class="border-strip"></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <div class="screen-title">Arabic Letters</div>
+  </div>
+  <div class="sub-body">
+    <div class="letters-grid" id="lettersGrid"></div>
+  </div>
+  <div class="border-strip" style="margin-top:auto"></div>
+</div>
+
+<div id="settingsScreen" class="screen">
+  <div class="border-strip"></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <div class="screen-title">⚙️ Settings</div>
+  </div>
+  <div class="sub-body">
+    <div class="setting-row">
+      <div class="setting-label">Sound</div>
+      <label class="toggle">
+        <input type="checkbox" id="soundToggle" checked onchange="setSoundEnabled(this.checked)"/>
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">🌙 Dark Mode</div>
+      <div class="toggle-wrap">
+        <span class="toggle-emoji" id="themeEmoji">🌙</span>
+        <label class="toggle">
+          <input type="checkbox" id="themeToggle" checked onchange="setTheme(this.checked?'dark':'light')"/>
+          <div class="toggle-track"></div>
+        </label>
+        <span class="toggle-emoji" id="themeEmoji2">☀️</span>
+      </div>
+    </div>
+    <div class="setting-row"><div class="setting-label">Pattern Speed</div><div class="setting-val">Normal</div></div>
+    <div class="setting-row" style="border:none">
+      <div class="setting-label">Reset Progress</div>
+      <div class="setting-val" style="color:var(--bad);cursor:pointer" onclick="resetProgress()">Reset</div>
+    </div>
+  </div>
+  <div class="border-strip" style="margin-top:auto"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     99 NAMES SCREEN
+══════════════════════════════════════════════════ -->
+<div id="namesScreen" class="screen">
+  <div class="border-strip"></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <div class="screen-title">✨ 99 Names of Allah</div>
+  </div>
+  <div class="sub-body">
+    <div class="names-list" id="namesList"></div>
+  </div>
+  <div class="border-strip" style="margin-top:auto"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     OVERLAYS
+══════════════════════════════════════════════════ -->
+<div id="countdownOverlay" class="countdown-overlay hidden">
+  <div class="cd-team" id="cdTeamLabel">Team A's Turn</div>
+  <div class="cd-num" id="cdNum">3</div>
+  <div class="cd-sub">Get ready…</div>
+</div>
+
+<div id="gameoverOverlay" class="gameover-overlay hidden">
+  <div class="go-title">⏰ Time's Up!</div>
+  <div class="go-winner" id="goWinner">Team A Wins!</div>
+  <div class="go-scores" id="goScores"></div>
+  <div class="go-actions">
+    <button class="go-btn primary" onclick="playAgain()">▶ Play Again</button>
+    <button class="go-btn" onclick="go('menuScreen');document.getElementById('gameoverOverlay').classList.add('hidden')">Menu</button>
+  </div>
+</div>
+
+<div id="jeopardyScreen" class="jq hidden" aria-hidden="true">
+  <div class="jqWrap">
+    <div class="jqTop">
+      <div class="jqMeta">
+        <div class="jqTitle" id="jqTitle">Team A • Question</div>
+        <div class="jqDiff" id="jqDiff">Easy</div>
+      </div>
+      <div class="jqTimer" id="jqTimer">15</div>
+    </div>
+    <div class="jqQ" id="jqQ">…</div>
+    <div class="jqAns" id="jqAns"></div>
+    <div class="jqMsg" id="jqMsg">Choose an answer.</div>
+    <div class="jqExplain hidden" id="jqExplain"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+/* ── QUESTION BANKS ──────────────────────────────── */
+const Q_EASY=[
+  {q:"Who was the first person to call the Adhan?",choices:["Abu Bakr","Umar","Bilal ibn Rabah","Uthman"],correct:2,explain:"Bilal ibn Rabah (رضي الله عنه) is the first mu'adhin."},
+  {q:"How many daily obligatory prayers are there?",choices:["3","5","6","7"],correct:1,explain:"The five prayers: Fajr, Dhuhr, Asr, Maghrib, Isha."},
+  {q:"Muslims fast in which month?",choices:["Rajab","Ramadan","Shawwal","Safar"],correct:1,explain:"Fasting in Ramadan is obligatory."},
+  {q:"How many surahs are in the Qur'an?",choices:["99","114","120","144"],correct:1,explain:"The Qur'an contains 114 surahs."},
+  {q:"The first surah of the Qur'an is…",choices:["Al-Baqarah","Al-Fatihah","An-Nas","Al-Kawthar"],correct:1,explain:"Al-Fatihah is the opening chapter."},
+  {q:"The Ka'bah is located in…",choices:["Makkah","Madinah","Jerusalem","Cairo"],correct:0,explain:"The Ka'bah is in Masjid al-Haram in Makkah."},
+  {q:"The Islamic testimony of faith is called…",choices:["Shahadah","Salah","Zakat","Sawm"],correct:0,explain:"Shahadah is the declaration of faith."},
+  {q:"Finish: 'Bismillah ir-Rahman ir-____'",choices:["Rahim","Aziz","Kabir","Malik"],correct:0,explain:"The phrase is 'Ar-Rahman Ar-Rahim'."},
+  {q:"Which surah begins 'Qul huwa Allahu ahad'?",choices:["Al-Falaq","An-Nas","Al-Ikhlas","Al-Kafirun"],correct:2,explain:"That opening is from Surah Al-Ikhlas."},
+  {q:"Finish: 'Alhamdu lillahi Rabbil-____'",choices:["alamin","qadr","nas","falaq"],correct:0,explain:"From Al-Fatihah: 'Rabbil-'alamin'."},
+  {q:"What is ablution before prayer called?",choices:["Wudu","Ghusl","Ihram","Adhan"],correct:0,explain:"Wudu is the washing before prayer."},
+  {q:"What do Muslims say as a greeting?",choices:["Hello","As-salamu alaykum","Good day","Ciao"],correct:1,explain:"As-salamu alaykum means peace be upon you."},
+  {q:"Which is the last surah in the Qur'an?",choices:["Al-Fatihah","An-Nas","Al-Falaq","Al-Asr"],correct:1,explain:"An-Nas is the final surah."},
+  {q:"The call to prayer is called…",choices:["Adhan","Khutbah","Dua","Taraweeh"],correct:0,explain:"Adhan is the call to prayer."},
+  {q:"'SubhanAllah' means…",choices:["Glory be to Allah","Thanks to Allah","Allah is Great","Peace"],correct:0,explain:"SubhanAllah means Glory be to Allah."},
+  {q:"'Alhamdulillah' means…",choices:["Praise to Allah","Glory be to Allah","Allah is Great","Allah is One"],correct:0,explain:"Alhamdulillah means Praise be to Allah."},
+  {q:"Which city contains Masjid an-Nabawi?",choices:["Makkah","Madinah","Ta'if","Jerusalem"],correct:1,explain:"Masjid an-Nabawi is in Madinah."},
+  {q:"The pilgrimage to Makkah is called…",choices:["Sawm","Hajj","Zakat","Salah"],correct:1,explain:"Hajj is the pilgrimage."},
+  {q:"Which angel brought revelation to the Prophet ﷺ?",choices:["Jibril","Mikail","Israfil","Malik"],correct:0,explain:"Angel Jibril delivered revelation."},
+  {q:"How many pillars of Islam are there?",choices:["3","4","5","6"],correct:2,explain:"There are five pillars."},
+  {q:"Finish: 'Ihdina s-siratal ____'",choices:["mustaqim","rahim","kabir","azim"],correct:0,explain:"From Al-Fatihah: 'siratal mustaqim'."},
+  {q:"How many rak'ah are in Fajr (fard)?",choices:["2","3","4","5"],correct:0,explain:"Fajr has 2 fard rak'ah."},
+  {q:"How many rak'ah are in Maghrib (fard)?",choices:["2","3","4","5"],correct:1,explain:"Maghrib has 3 fard rak'ah."},
+  {q:"'Allahu Akbar' means…",choices:["Allah is Greatest","Allah is One","Allah is Peace","Allah is Light"],correct:0,explain:"Allahu Akbar means Allah is the Greatest."},
+  {q:"Obligatory charity (a pillar) is called…",choices:["Sadaqah","Zakat","Hajj","Tawaf"],correct:1,explain:"Zakat is obligatory charity."},
+  {q:"Friday congregational prayer is called…",choices:["Eid","Jumu'ah","Ashura","Qiyam"],correct:1,explain:"Jumu'ah is the Friday prayer."},
+  {q:"Reply to 'As-salamu alaykum' is…",choices:["Wa alaykum as-salam","Salam","Barakah","Nur"],correct:0,explain:"Reply: 'Wa alaykum as-salam'."},
+  {q:"Which surah is 'The Opening'?",choices:["Al-Fatihah","Al-Baqarah","Al-Ikhlas","An-Nas"],correct:0,explain:"Al-Fatihah means The Opening."},
+  {q:"Which is NOT a prayer time?",choices:["Fajr","Dhuhr","Isha","Zamzam"],correct:3,explain:"Zamzam is a well, not a prayer time."},
+  {q:"What is the direction Muslims face in Salah?",choices:["Qiblah","Minbar","Mihrab","Iqamah"],correct:0,explain:"Qiblah is the direction toward the Ka'bah."}
+];
+const Q_MED=[
+  {q:"Which surah is the longest in the Qur'an?",choices:["Al-Baqarah","Yasin","Al-Mulk","Al-Kahf"],correct:0,explain:"Al-Baqarah is the longest surah."},
+  {q:"How many rak'ah are in Dhuhr (fard)?",choices:["2","3","4","5"],correct:2,explain:"Dhuhr has 4 fard rak'ah."},
+  {q:"How many rak'ah are in Asr (fard)?",choices:["2","3","4","5"],correct:2,explain:"Asr has 4 fard rak'ah."},
+  {q:"How many rak'ah are in Isha (fard)?",choices:["2","3","4","5"],correct:2,explain:"Isha has 4 fard rak'ah."},
+  {q:"Which surah is called 'The Sincerity'?",choices:["Al-Ikhlas","Al-Falaq","An-Nas","Al-Masad"],correct:0,explain:"Al-Ikhlas emphasizes pure monotheism."},
+  {q:"The Friday sermon is called…",choices:["Adhan","Iqamah","Khutbah","Taraweeh"],correct:2,explain:"Khutbah is the Friday sermon."},
+  {q:"Charity at end of Ramadan is called…",choices:["Zakat al-Fitr","Zakat al-Mal","Waqf","Fidyah"],correct:0,explain:"Zakat al-Fitr is given before Eid prayer."},
+  {q:"Which surah is commonly recited on Friday?",choices:["Al-Kahf","Al-Masad","Al-Fil","Al-Kawthar"],correct:0,explain:"Many recite Surah Al-Kahf on Fridays."},
+  {q:"Which surah has the People of the Cave?",choices:["Al-Kahf","Al-Mulk","Al-Qadr","Yasin"],correct:0,explain:"Al-Kahf means The Cave."},
+  {q:"Which surah is number 112?",choices:["Al-Ikhlas","Al-Falaq","An-Nas","Al-Asr"],correct:0,explain:"Al-Ikhlas is surah 112."},
+  {q:"Which surah is number 113?",choices:["Al-Falaq","An-Nas","Al-Ikhlas","Al-Qadr"],correct:0,explain:"Al-Falaq is surah 113."},
+  {q:"Which surah is number 114?",choices:["An-Nas","Al-Falaq","Al-Ikhlas","Al-Kawthar"],correct:0,explain:"An-Nas is surah 114."},
+  {q:"Dry ablution is called…",choices:["Tayammum","Ghusl","Wudu","Ihram"],correct:0,explain:"Tayammum is performed with clean earth."},
+  {q:"Full ritual bath is called…",choices:["Wudu","Ghusl","Siwak","Ihram"],correct:1,explain:"Ghusl is the full-body ritual bath."},
+  {q:"Which is NOT one of the Five Pillars?",choices:["Salah","Zakat","Tafsir","Sawm"],correct:2,explain:"Tafsir is Qur'anic interpretation, not a pillar."},
+  {q:"The Night Journey and Ascension is called…",choices:["Hijrah","Isra' and Mi'raj","Badr","Uhud"],correct:1,explain:"The event is Isra' and Mi'raj."},
+  {q:"Which month comes after Ramadan?",choices:["Shawwal","Safar","Rajab","Dhul Qa'dah"],correct:0,explain:"Shawwal comes after Ramadan."},
+  {q:"Finish: 'Maliki ____ id-din'",choices:["yawm","nur","deen","haqq"],correct:0,explain:"From Al-Fatihah: 'Maliki yawmid-din'."},
+  {q:"Which prayer is right after sunset?",choices:["Maghrib","Isha","Asr","Dhuhr"],correct:0,explain:"Maghrib begins after sunset."},
+  {q:"Laylat al-Qadr is better than how many months?",choices:["100","1000","500","12"],correct:1,explain:"Laylat al-Qadr is better than a thousand months."},
+  {q:"Finish: 'Lam yalid wa lam ____'",choices:["yulad","yabqa","yarham","yuhsin"],correct:0,explain:"From Al-Ikhlas: 'Lam yalid wa lam yulad'."},
+  {q:"Which surah is called 'The Elephant'?",choices:["Al-Fil","Quraysh","Al-Ma'un","Al-Humazah"],correct:0,explain:"Al-Fil means The Elephant."},
+  {q:"Which surah is about time and human loss?",choices:["Al-Asr","Al-Fil","Al-Qadr","Quraysh"],correct:0,explain:"Surah Al-Asr mentions time and loss."},
+  {q:"Night prayer in Ramadan is called…",choices:["Taraweeh","Witr","Duha","Janazah"],correct:0,explain:"Taraweeh is prayed in Ramadan nights."},
+  {q:"Which battle is the first major battle in Islam?",choices:["Uhud","Badr","Khandaq","Hunayn"],correct:1,explain:"Badr is the first major battle."},
+  {q:"Hijrah destination was…",choices:["Makkah","Ta'if","Madinah","Jerusalem"],correct:2,explain:"Hijrah was from Makkah to Madinah."},
+  {q:"Which surah begins 'Tabarakalladhi…'?",choices:["Al-Mulk","Al-Fatihah","Al-Ikhlas","Al-Asr"],correct:0,explain:"Surah Al-Mulk begins with 'Tabarakalladhi…'."},
+  {q:"Which prayer is at midday?",choices:["Dhuhr","Fajr","Maghrib","Isha"],correct:0,explain:"Dhuhr is midday prayer."},
+  {q:"Finish: 'Qul a'udhu bi Rabbil-____' (Daybreak)",choices:["falaq","nas","mulk","qadr"],correct:0,explain:"Surah Al-Falaq begins with that phrase."},
+  {q:"Finish: 'Siraat alladhina an'amta ____'",choices:["alayhim","alaykum","alayna","alayka"],correct:0,explain:"From Al-Fatihah: 'an'amta alayhim'."}
+];
+const Q_HARD=[
+  {q:"Which caliph is known as 'As-Siddiq'?",choices:["Umar","Abu Bakr","Uthman","Ali"],correct:1,explain:"Abu Bakr (رضي الله عنه) is titled As-Siddiq."},
+  {q:"Which caliph is known as 'Al-Faruq'?",choices:["Umar","Abu Bakr","Uthman","Ali"],correct:0,explain:"Umar (رضي الله عنه) is titled Al-Faruq."},
+  {q:"Which caliph is known as 'Dhun-Nurayn'?",choices:["Umar","Abu Bakr","Uthman","Ali"],correct:2,explain:"Uthman (رضي الله عنه) is titled Dhun-Nurayn."},
+  {q:"Which angel is associated with the trumpet?",choices:["Jibril","Mikail","Israfil","Malik"],correct:2,explain:"Israfil is associated with the trumpet."},
+  {q:"Finish: 'Qul ____ Allahu ahad'",choices:["huwa","inna","anta","hiya"],correct:0,explain:"Al-Ikhlas begins: 'Qul huwa Allahu ahad'."},
+  {q:"Finish: 'Wa lam yakun lahu ____ ahad'",choices:["kufuwan","rahman","salam","nuran"],correct:0,explain:"From Al-Ikhlas: '…lahu kufuwan ahad'."},
+  {q:"Which surah warns against slander/mockery?",choices:["Al-Humazah","Al-Kawthar","Al-Fil","Al-Asr"],correct:0,explain:"Al-Humazah addresses mockery and slander."},
+  {q:"Which surah warns about Abu Lahab by name?",choices:["Al-Masad","Al-Asr","Al-Qadr","Quraysh"],correct:0,explain:"Surah Al-Masad addresses Abu Lahab."},
+  {q:"Which surah begins with 'Wal-'asr'?",choices:["Al-Asr","Al-Ikhlas","Al-Fil","Al-Ma'un"],correct:0,explain:"Surah Al-Asr begins with 'Wal-'asr'."},
+  {q:"Which surah begins 'Inna a'taynaka…'?",choices:["Al-Kawthar","Al-Asr","Al-Fil","Al-Masad"],correct:0,explain:"Surah Al-Kawthar begins with that phrase."},
+  {q:"Correct order of surahs 112–114?",choices:["An-Nas, Al-Falaq, Al-Ikhlas","Al-Ikhlas, Al-Falaq, An-Nas","Al-Falaq, An-Nas, Al-Ikhlas","Al-Ikhlas, An-Nas, Al-Falaq"],correct:1,explain:"Al-Ikhlas (112), Al-Falaq (113), An-Nas (114)."},
+  {q:"Which surah is called 'The Calamity'?",choices:["Al-Qari'ah","Al-Asr","Al-Fil","Quraysh"],correct:0,explain:"Al-Qari'ah refers to a striking calamity."},
+  {q:"Which surah contains Ayat al-Kursi?",choices:["Al-Baqarah","Al-Imran","Yasin","Al-Mulk"],correct:0,explain:"Ayat al-Kursi is in Surah Al-Baqarah (2:255)."},
+  {q:"Which surah is commonly read at night for protection?",choices:["Al-Mulk","Al-Fil","Al-Kawthar","Quraysh"],correct:0,explain:"Many Muslims recite Surah Al-Mulk at night."},
+  {q:"Finish: '…wa la ddallin' ends which surah?",choices:["Al-Fatihah","Al-Ikhlas","Al-Falaq","An-Nas"],correct:0,explain:"It ends Surah Al-Fatihah."},
+  {q:"Finish: 'Ar-Rahman ir-____'",choices:["Rahim","Aziz","Alim","Kabir"],correct:0,explain:"From Al-Fatihah: 'Ar-Rahman ir-Rahim'."},
+  {q:"What is the Night Journey and Ascension?",choices:["Migration","Isra' and Mi'raj","Battle of Badr","Treaty"],correct:1,explain:"Isra' and Mi'raj is the Night Journey and Ascension."},
+  {q:"Which is the Islamic pilgrimage in Dhul Hijjah?",choices:["Hajj","Umrah","Zakat","Sawm"],correct:0,explain:"Hajj occurs in Dhul Hijjah."},
+  {q:"'Sawm' means…",choices:["Prayer","Charity","Fasting","Pilgrimage"],correct:2,explain:"Sawm means fasting."},
+  {q:"Full-body ritual purification is called…",choices:["Ghusl","Wudu","Tayammum","Siwak"],correct:0,explain:"Ghusl is the full-body ritual bath."},
+  {q:"Which prayer is before sunrise?",choices:["Fajr","Dhuhr","Asr","Isha"],correct:0,explain:"Fajr is the dawn prayer."},
+  {q:"Finish: 'Ghayril maghdubi ____'",choices:["alayhim","alaykum","alayna","alayka"],correct:0,explain:"From Al-Fatihah: '…maghdubi alayhim'."},
+  {q:"Which is NOT a pillar of Islam?",choices:["Salah","Zakat","Sawm","Tafsir"],correct:3,explain:"Tafsir is Qur'anic interpretation, not a pillar."},
+  {q:"Finish: 'Bismillah ir-Rahman ir-____'",choices:["Rahim","Aziz","Kabir","Malik"],correct:0,explain:"The phrase is 'Ar-Rahman Ar-Rahim'."},
+  {q:"What does 'Zakat' mean?",choices:["Obligatory charity","Prayer","Fasting","Pilgrimage"],correct:0,explain:"Zakat is obligatory charity."}
+];
+
+/* ── HELPERS ─────────────────────────────────────── */
+function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+function autoDiff(len){return len<=3?"Easy":len<=6?"Medium":"Hard";}
+function pickQ(diff){
+  const bank=diff==="Easy"?Q_EASY:diff==="Medium"?Q_MED:Q_HARD;
+  const b=bank[Math.floor(Math.random()*bank.length)];
+  const labeled=b.choices.map((t,i)=>({t,ok:i===b.correct}));
+  shuffle(labeled);
+  return{q:b.q,choices:labeled.map(x=>x.t),correct:labeled.findIndex(x=>x.ok),diff,explain:b.explain};
+}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* ── THEME ───────────────────────────────────────── */
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  localStorage.setItem("qq_theme",t);
+  const isDark=t==="dark";
+  const toggle=document.getElementById("themeToggle");
+  if(toggle)toggle.checked=isDark;
+  document.getElementById("themeEmoji").textContent=isDark?"🌙":"☀️";
+  document.getElementById("themeEmoji2").textContent=isDark?"☀️":"🌙";
+}
+function initTheme(){
+  const saved=localStorage.getItem("qq_theme")||"dark";
+  setTheme(saved);
+}
+
+/* ── SOUND ───────────────────────────────────────── */
+let soundEnabled=true;
+function setSoundEnabled(on){
+  soundEnabled=on;
+  localStorage.setItem("qq_sound",on?"1":"0");
+}
+let actx=null;
+function beep(freq=440,ms=120){
+  if(!soundEnabled)return;
+  try{
+    actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.frequency.value=freq;o.type="sine";
+    o.connect(g);g.connect(actx.destination);
+    g.gain.setValueAtTime(0.0001,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.16,actx.currentTime+0.01);
+    o.start();
+    setTimeout(()=>{g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+0.02);o.stop(actx.currentTime+0.03);},ms);
+  }catch{}
+}
+const TONES={1:392,2:494,3:659,4:740,5:330};
+
+/* ── NAVIGATION ──────────────────────────────────── */
+const SCREENS=["menuScreen","nameScreen","gameScreen","surahScreen","progressScreen","lettersScreen","settingsScreen","namesScreen"];
+function go(id){
+  SCREENS.forEach(s=>{const el=document.getElementById(s);if(el)el.classList.toggle("active",s===id);});
+}
+
+/* ── CLOCK PRESETS ───────────────────────────────── */
+let clockMinutes=5;
+let qSeconds=15;
+const clockPresets=[1,3,5,10];
+const qPresets=[10,15,20,30];
+
+function setClockPreset(m){
+  clockMinutes=m;
+  document.getElementById("clockMinInput").value=m;
+  document.querySelectorAll(".clock-chip").forEach(c=>{
+    if(!c.id||c.id.startsWith("qchip")) return;
+    c.classList.toggle("active",Number(c.textContent)===m||c.textContent===m+"min"||c.textContent===m+" min");
+  });
+  // simpler: just update all clock chips
+  document.querySelectorAll(".clock-chip:not([id])").forEach(c=>{
+    const txt=c.textContent.replace(" min","");
+    c.classList.toggle("active",Number(txt)===m);
+  });
+  document.querySelectorAll(".clock-chip[onclick*='setClockPreset']").forEach(c=>{
+    const n=Number(c.textContent.replace(" min",""));
+    c.classList.toggle("active",n===m);
+  });
+}
+function onClockInput(){
+  const v=Number(document.getElementById("clockMinInput").value);
+  if(Number.isFinite(v)&&v>0){
+    clockMinutes=clamp(v,1,60);
+    document.querySelectorAll(".clock-chip[onclick*='setClockPreset']").forEach(c=>c.classList.remove("active"));
+  }
+}
+function setQPreset(s){
+  qSeconds=s;
+  document.querySelectorAll(".clock-chip[onclick*='setQPreset']").forEach(c=>{
+    const n=Number(c.textContent.replace("s",""));
+    c.classList.toggle("active",n===s);
+  });
+}
+
+/* ── MODE ────────────────────────────────────────── */
+let gameMode="single";
+function setMode(m){
+  gameMode=m;
+  document.getElementById("modeBtnSingle").classList.toggle("active",m==="single");
+  document.getElementById("modeBtnTwo").classList.toggle("active",m==="two");
+  document.getElementById("singleFields").style.display=m==="single"?"block":"none";
+  document.getElementById("twoFields").style.display=m==="two"?"block":"none";
+}
+
+/* ── START GAME ──────────────────────────────────── */
+function startGame(){
+  if(gameMode==="single"){
+    const name=document.getElementById("singleNameInput").value.trim();
+    if(!name){alert("Enter your name.");return;}
+    document.getElementById("scoreNameA").textContent=name;
+    document.getElementById("scoreNameB").textContent="—";
+    document.getElementById("scoreTeamB").style.opacity="0.3";
+  } else {
+    const a=document.getElementById("teamAInput").value.trim();
+    const b=document.getElementById("teamBInput").value.trim();
+    if(!a||!b){alert("Enter both team names.");return;}
+    document.getElementById("scoreNameA").textContent=a;
+    document.getElementById("scoreNameB").textContent=b;
+    document.getElementById("scoreTeamB").style.opacity="";
+  }
+  const mins=Number(document.getElementById("clockMinInput").value)||5;
+  clockMinutes=clamp(mins,1,60);
+  go("gameScreen");
+  resetMatch();
+}
+
+/* ═══════════════════════════════════════════════════
+   GAME STATE
+═══════════════════════════════════════════════════ */
+let active="A";
+let score={A:0,B:0};
+let roundNum=1;
+let patternLevel=2;
+const MAX_LEVEL=10;
+let sequence=[];
+let inputIdx=0;
+let locked=true;
+let awaitingQ=false;
+let currentQ=null;
+let qTimerId=null;
+let qTimeLeft=0;
+let gameClockId=null;
+let gameSecsLeft=0;
+let matchRunning=false;
+
+const pads=Array.from(document.querySelectorAll(".pad"));
+
+/* ── SCOREBOARD UI ───────────────────────────────── */
+function updateSB(){
+  document.getElementById("scoreNumA").textContent=score.A;
+  document.getElementById("scoreNumB").textContent=score.B;
+  document.getElementById("roundNum").textContent=roundNum;
+  document.getElementById("patLen").textContent=patternLevel;
+  document.getElementById("scoreTeamA").classList.toggle("active-team",active==="A");
+  document.getElementById("scoreTeamB").classList.toggle("active-team",active==="B");
+}
+function setStatus(html){document.getElementById("gameStatus").innerHTML=html;}
+function setPads(on){pads.forEach(p=>p.disabled=!on);}
+
+function getTeamName(t){
+  return document.getElementById(t==="A"?"scoreNameA":"scoreNameB").textContent||"Team "+t;
+}
+
+/* ── GAME CLOCK ──────────────────────────────────── */
+function fmtTime(s){
+  const m=Math.floor(s/60),sec=s%60;
+  return `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+}
+function updateClockUI(){
+  const el=document.getElementById("clockDisplay");
+  el.textContent=fmtTime(gameSecsLeft);
+  el.classList.remove("warn","danger");
+  if(gameSecsLeft<=30&&gameSecsLeft>10)el.classList.add("warn");
+  if(gameSecsLeft<=10)el.classList.add("danger");
+}
+function startGameClock(){
+  stopGameClock();
+  gameSecsLeft=clockMinutes*60;
+  updateClockUI();
+  gameClockId=setInterval(()=>{
+    gameSecsLeft--;
+    updateClockUI();
+    if(gameSecsLeft<=0){stopGameClock();endGame();}
+  },1000);
+}
+function stopGameClock(){
+  if(gameClockId){clearInterval(gameClockId);gameClockId=null;}
+}
+
+/* ── Q TIMER ─────────────────────────────────────── */
+function stopQTimer(){
+  if(qTimerId){clearInterval(qTimerId);qTimerId=null;}
+  qTimeLeft=0;
+  const el=document.getElementById("jqTimer");
+  el.textContent="—";el.classList.remove("warn","danger");
+}
+function updateQTimerUI(){
+  const el=document.getElementById("jqTimer");
+  el.textContent=qTimeLeft;
+  el.classList.remove("warn","danger");
+  if(qTimeLeft<=7&&qTimeLeft>3)el.classList.add("warn");
+  if(qTimeLeft<=3)el.classList.add("danger");
+}
+function startQTimer(){
+  stopQTimer();
+  qTimeLeft=qSeconds;
+  updateQTimerUI();
+  qTimerId=setInterval(async()=>{
+    qTimeLeft--;updateQTimerUI();
+    if(qTimeLeft<=0){stopQTimer();await handleTimeout();}
+  },1000);
+}
+
+/* ── QUIZ OVERLAY ────────────────────────────────── */
+function hideQuiz(){
+  stopQTimer();
+  document.getElementById("jeopardyScreen").classList.add("hidden");
+  document.getElementById("jeopardyScreen").setAttribute("aria-hidden","true");
+  document.getElementById("jqAns").innerHTML="";
+  document.getElementById("jqMsg").textContent="";
+  document.getElementById("jqExplain").classList.add("hidden");
+  awaitingQ=false;currentQ=null;
+}
+function showQuiz(q){
+  awaitingQ=true;currentQ=q;
+  const jq=document.getElementById("jeopardyScreen");
+  jq.classList.remove("hidden");jq.setAttribute("aria-hidden","false");
+  document.getElementById("jqTitle").textContent=getTeamName(active)+" • Question";
+  document.getElementById("jqDiff").textContent=q.diff;
+  document.getElementById("jqQ").textContent=q.q;
+  document.getElementById("jqMsg").textContent="Choose an answer.";
+  document.getElementById("jqExplain").classList.add("hidden");
+  const ans=document.getElementById("jqAns");
+  ans.innerHTML="";
+  q.choices.forEach((c,i)=>{
+    const b=document.createElement("button");
+    b.textContent=c;b.addEventListener("click",()=>handleAnswer(i));ans.appendChild(b);
+  });
+  startQTimer();
+}
+function setAnsBtnsEnabled(on){
+  Array.from(document.getElementById("jqAns").querySelectorAll("button")).forEach(b=>b.disabled=!on);
+}
+
+/* ── PATTERN ─────────────────────────────────────── */
+function buildSeq(len){const s=[];for(let i=0;i<len;i++)s.push(1+Math.floor(Math.random()*5));return s;}
+
+async function flashPad(n,dur=240){
+  const pad=pads.find(p=>Number(p.dataset.n)===n);if(!pad)return;
+  pad.classList.add("flash");
+  beep(TONES[n]||440,Math.max(90,dur-80));
+  await delay(dur);pad.classList.remove("flash");await delay(80);
+}
+
+async function playSeq(){
+  locked=true;setPads(false);hideQuiz();
+  setStatus(`👀 Watch the pattern… <span class="good">${getTeamName(active)}</span>`);
+  for(const n of sequence)await flashPad(n,240);
+  inputIdx=0;locked=false;setPads(true);
+  setStatus(`Your turn! Tap the pattern (${sequence.length} steps).`);
+}
+
+/* ── COUNTDOWN ───────────────────────────────────── */
+async function showCountdown(teamName,secs=4){
+  const overlay=document.getElementById("countdownOverlay");
+  document.getElementById("cdTeamLabel").textContent=teamName+"'s Turn";
+  overlay.classList.remove("hidden");
+  for(let i=secs;i>=1;i--){
+    document.getElementById("cdNum").textContent=i;
+    beep(i===1?660:440,80);
+    await delay(1000);
+  }
+  overlay.classList.add("hidden");
+}
+
+/* ── SCORING ─────────────────────────────────────── */
+const PTS={Easy:10,Medium:20,Hard:30};
+function awardPts(diff){score[active]+=(PTS[diff]||10);updateSB();}
+
+/* ── TURN END ────────────────────────────────────── */
+async function endTurnAndSwitch(msgHtml){
+  hideQuiz();locked=true;setPads(false);
+  setStatus(msgHtml);updateSB();
+  await delay(1200);
+  if(!matchRunning)return;
+
+  patternLevel=Math.min(MAX_LEVEL,patternLevel+1);
+  roundNum++;
+  active=active==="A"?"B":"A";
+  updateSB();
+  sequence=buildSeq(patternLevel);
+
+  setStatus(`Next: <span class="good">${getTeamName(active)}</span>`);
+  await showCountdown(getTeamName(active),3);
+  if(!matchRunning)return;
+  await playSeq();
+}
+
+/* ── TIMEOUT / ANSWER ────────────────────────────── */
+async function handleTimeout(){
+  if(!awaitingQ||!currentQ)return;
+  setAnsBtnsEnabled(false);
+  const btns=Array.from(document.getElementById("jqAns").querySelectorAll("button"));
+  btns[currentQ.correct]?.classList.add("correct");
+  beep(180,180);
+  document.getElementById("jqMsg").innerHTML=`<span class="bad">⏰ Time's up! No points.</span>`;
+  document.getElementById("jqExplain").classList.remove("hidden");
+  document.getElementById("jqExplain").textContent="Explanation: "+currentQ.explain;
+  await delay(2000);
+  await endTurnAndSwitch(`<span class="bad">Time's up.</span> No points. Turn switches.`);
+}
+
+async function handleAnswer(idx){
+  if(!awaitingQ||!currentQ)return;
+  stopQTimer();setAnsBtnsEnabled(false);
+  const btns=Array.from(document.getElementById("jqAns").querySelectorAll("button"));
+  const diff=currentQ.diff;
+  if(idx===currentQ.correct){
+    btns[idx].classList.add("correct");
+    beep(740,120);
+    const pts=PTS[diff];
+    document.getElementById("jqMsg").innerHTML=`<span class="good">✅ Correct! +${pts} points!</span>`;
+    document.getElementById("jqExplain").classList.remove("hidden");
+    document.getElementById("jqExplain").textContent="Explanation: "+currentQ.explain;
+    awardPts(diff);
+    await delay(2000);
+    await endTurnAndSwitch(`<span class="good">Correct!</span> ${getTeamName(active)} +${pts} pts. Turn switches.`);
+  } else {
+    btns[idx].classList.add("wrong");
+    btns[currentQ.correct]?.classList.add("correct");
+    beep(180,180);
+    document.getElementById("jqMsg").innerHTML=`<span class="bad">❌ Wrong. No points.</span>`;
+    document.getElementById("jqExplain").classList.remove("hidden");
+    document.getElementById("jqExplain").textContent="Explanation: "+currentQ.explain;
+    await delay(2000);
+    await endTurnAndSwitch(`<span class="bad">Wrong answer.</span> No points. Turn switches.`);
+  }
+}
+
+/* ── PATTERN MISTAKE ─────────────────────────────── */
+async function onMistake(expected,got){
+  beep(160,220);locked=true;setPads(false);hideQuiz();
+  await endTurnAndSwitch(`<span class="bad">Pattern mistake!</span> Expected <b>${expected}</b>, got <b>${got}</b>. Turn switches.`);
+}
+
+/* ── PATTERN COMPLETE → QUESTION ─────────────────── */
+async function onPatternComplete(){
+  locked=true;setPads(false);
+  const choice=document.getElementById("diffSelect").value;
+  const diff=choice==="auto"?autoDiff(patternLevel):choice;
+  setStatus(`<span class="good">Pattern complete!</span> Answer the question…`);
+  await delay(400);
+  showQuiz(pickQ(diff));
+}
+
+/* ── PAD INPUT ───────────────────────────────────── */
+pads.forEach(p=>{
+  p.addEventListener("click",async()=>{
+    if(locked||awaitingQ)return;
+    const n=Number(p.dataset.n);
+    await flashPad(n,150);
+    const expected=sequence[inputIdx];
+    if(n!==expected){await onMistake(expected,n);return;}
+    inputIdx++;
+    if(inputIdx>=sequence.length)await onPatternComplete();
+  });
+});
+
+/* ── MATCH START / RESET ─────────────────────────── */
+async function startMatch(){
+  matchRunning=true;
+  locked=true;setPads(false);hideQuiz();
+  score={A:0,B:0};patternLevel=2;roundNum=1;active="A";
+  sequence=buildSeq(patternLevel);
+  updateSB();
+  startGameClock();
+  setStatus(`Match start! <span class="good">${getTeamName(active)}</span> goes first.`);
+  await showCountdown(getTeamName(active),3);
+  if(!matchRunning)return;
+  await playSeq();
+}
+
+function resetMatch(){
+  matchRunning=false;
+  stopGameClock();stopQTimer();hideQuiz();
+  document.getElementById("countdownOverlay").classList.add("hidden");
+  active="A";score={A:0,B:0};roundNum=1;patternLevel=2;
+  sequence=[];inputIdx=0;locked=true;awaitingQ=false;currentQ=null;
+  setPads(false);updateSB();
+  document.getElementById("clockDisplay").textContent=fmtTime(clockMinutes*60);
+  document.getElementById("clockDisplay").classList.remove("warn","danger");
+  setStatus("Press <b>▶ Start</b> to begin.");
+}
+
+/* ── GAME OVER ───────────────────────────────────── */
+function endGame(){
+  matchRunning=false;
+  stopQTimer();hideQuiz();
+  locked=true;setPads(false);
+  document.getElementById("countdownOverlay").classList.add("hidden");
+
+  const aScore=score.A,bScore=score.B;
+  const aName=getTeamName("A"),bName=getTeamName("B");
+  let winnerText;
+  if(gameMode==="single"){
+    winnerText=`${aName} scored ${aScore} pts!`;
+  } else if(aScore>bScore){
+    winnerText=`🏆 ${aName} Wins!`;
+  } else if(bScore>aScore){
+    winnerText=`🏆 ${bName} Wins!`;
+  } else {
+    winnerText="🤝 It's a Draw!";
+  }
+
+  document.getElementById("goWinner").textContent=winnerText;
+
+  const goScores=document.getElementById("goScores");
+  if(gameMode==="single"){
+    goScores.innerHTML=`<div class="go-score-box winner-box"><div class="go-score-name">${aName}</div><div class="go-score-num">${aScore}</div></div>`;
+  } else {
+    const aWon=aScore>=bScore;
+    goScores.innerHTML=`
+      <div class="go-score-box${aWon?" winner-box":""}"><div class="go-score-name">${aName}</div><div class="go-score-num">${aScore}</div></div>
+      <div class="go-score-box${!aWon?" winner-box":""}"><div class="go-score-name">${bName}</div><div class="go-score-num">${bScore}</div></div>`;
+  }
+
+  document.getElementById("gameoverOverlay").classList.remove("hidden");
+
+  // Save to leaderboard
+  try{
+    const entry={
+      ts:new Date().toISOString(),mode:gameMode,
+      teamA:aName,teamB:gameMode==="two"?bName:"",
+      score:Math.max(aScore,bScore),
+      scoreA:aScore,scoreB:bScore,
+      winner:winnerText.replace("🏆 ","").replace(" Wins!",""),
+      rounds:roundNum,correct:0
+    };
+    const board=JSON.parse(localStorage.getItem("qq_leaderboard")||"[]");
+    board.unshift(entry);
+    localStorage.setItem("qq_leaderboard",JSON.stringify(board.slice(0,30)));
+  }catch{}
+}
+
+function playAgain(){
+  document.getElementById("gameoverOverlay").classList.add("hidden");
+  startMatch();
+}
+
+function confirmLeave(){
+  if(matchRunning&&!confirm("Leave this game? Progress will be lost."))return;
+  matchRunning=false;stopGameClock();stopQTimer();hideQuiz();
+  document.getElementById("countdownOverlay").classList.add("hidden");
+  document.getElementById("gameoverOverlay").classList.add("hidden");
+  go("menuScreen");
+}
+
+/* ── LEADERBOARD ─────────────────────────────────── */
+function getLeaderboard(){try{return JSON.parse(localStorage.getItem("qq_leaderboard")||"[]");}catch{return[];}}
+function renderProgress(){
+  const board=getLeaderboard();
+  document.getElementById("statGames").textContent=board.length;
+  document.getElementById("statBest").textContent=board.length?Math.max(...board.map(x=>x.score||0)):0;
+  document.getElementById("statCorrect").textContent=board.reduce((a,x)=>a+(x.correct||0),0);
+  document.getElementById("statRounds").textContent=board.reduce((a,x)=>a+(x.rounds||0),0);
+  const el=document.getElementById("leaderboardList");
+  if(!board.length){el.textContent="No games yet.";return;}
+  el.innerHTML=board.slice(0,8).map(x=>`
+    <div class="lb-entry">
+      <span style="font-weight:700;color:var(--text)">${x.teamA}${x.teamB?" vs "+x.teamB:""}</span>
+      <span style="color:var(--gold-light)">${x.score||0} pts · ${new Date(x.ts).toLocaleDateString()}</span>
+    </div>`).join("");
+}
+
+/* ── SURAHS — ALL 114 ────────────────────────────── */
+const SURAHS=[
+  [1,"Al-Fatihah","الفاتحة"],[2,"Al-Baqarah","البقرة"],[3,"Ali 'Imran","آل عمران"],
+  [4,"An-Nisa","النساء"],[5,"Al-Ma'idah","المائدة"],[6,"Al-An'am","الأنعام"],
+  [7,"Al-A'raf","الأعراف"],[8,"Al-Anfal","الأنفال"],[9,"At-Tawbah","التوبة"],
+  [10,"Yunus","يونس"],[11,"Hud","هود"],[12,"Yusuf","يوسف"],
+  [13,"Ar-Ra'd","الرعد"],[14,"Ibrahim","إبراهيم"],[15,"Al-Hijr","الحجر"],
+  [16,"An-Nahl","النحل"],[17,"Al-Isra","الإسراء"],[18,"Al-Kahf","الكهف"],
+  [19,"Maryam","مريم"],[20,"Ta-Ha","طه"],[21,"Al-Anbiya","الأنبياء"],
+  [22,"Al-Hajj","الحج"],[23,"Al-Mu'minun","المؤمنون"],[24,"An-Nur","النور"],
+  [25,"Al-Furqan","الفرقان"],[26,"Ash-Shu'ara","الشعراء"],[27,"An-Naml","النمل"],
+  [28,"Al-Qasas","القصص"],[29,"Al-'Ankabut","العنكبوت"],[30,"Ar-Rum","الروم"],
+  [31,"Luqman","لقمان"],[32,"As-Sajdah","السجدة"],[33,"Al-Ahzab","الأحزاب"],
+  [34,"Saba","سبأ"],[35,"Fatir","فاطر"],[36,"Ya-Sin","يس"],
+  [37,"As-Saffat","الصافات"],[38,"Sad","ص"],[39,"Az-Zumar","الزمر"],
+  [40,"Ghafir","غافر"],[41,"Fussilat","فصلت"],[42,"Ash-Shura","الشورى"],
+  [43,"Az-Zukhruf","الزخرف"],[44,"Ad-Dukhan","الدخان"],[45,"Al-Jathiyah","الجاثية"],
+  [46,"Al-Ahqaf","الأحقاف"],[47,"Muhammad","محمد"],[48,"Al-Fath","الفتح"],
+  [49,"Al-Hujurat","الحجرات"],[50,"Qaf","ق"],[51,"Adh-Dhariyat","الذاريات"],
+  [52,"At-Tur","الطور"],[53,"An-Najm","النجم"],[54,"Al-Qamar","القمر"],
+  [55,"Ar-Rahman","الرحمن"],[56,"Al-Waqi'ah","الواقعة"],[57,"Al-Hadid","الحديد"],
+  [58,"Al-Mujadila","المجادلة"],[59,"Al-Hashr","الحشر"],[60,"Al-Mumtahanah","الممتحنة"],
+  [61,"As-Saf","الصف"],[62,"Al-Jumu'ah","الجمعة"],[63,"Al-Munafiqun","المنافقون"],
+  [64,"At-Taghabun","التغابن"],[65,"At-Talaq","الطلاق"],[66,"At-Tahrim","التحريم"],
+  [67,"Al-Mulk","الملك"],[68,"Al-Qalam","القلم"],[69,"Al-Haqqah","الحاقة"],
+  [70,"Al-Ma'arij","المعارج"],[71,"Nuh","نوح"],[72,"Al-Jinn","الجن"],
+  [73,"Al-Muzzammil","المزمل"],[74,"Al-Muddaththir","المدثر"],[75,"Al-Qiyamah","القيامة"],
+  [76,"Al-Insan","الإنسان"],[77,"Al-Mursalat","المرسلات"],[78,"An-Naba","النبأ"],
+  [79,"An-Nazi'at","النازعات"],[80,"'Abasa","عبس"],[81,"At-Takwir","التكوير"],
+  [82,"Al-Infitar","الانفطار"],[83,"Al-Mutaffifin","المطففين"],[84,"Al-Inshiqaq","الانشقاق"],
+  [85,"Al-Buruj","البروج"],[86,"At-Tariq","الطارق"],[87,"Al-A'la","الأعلى"],
+  [88,"Al-Ghashiyah","الغاشية"],[89,"Al-Fajr","الفجر"],[90,"Al-Balad","البلد"],
+  [91,"Ash-Shams","الشمس"],[92,"Al-Layl","الليل"],[93,"Ad-Duha","الضحى"],
+  [94,"Ash-Sharh","الشرح"],[95,"At-Tin","التين"],[96,"Al-'Alaq","العلق"],
+  [97,"Al-Qadr","القدر"],[98,"Al-Bayyinah","البينة"],[99,"Az-Zalzalah","الزلزلة"],
+  [100,"Al-'Adiyat","العاديات"],[101,"Al-Qari'ah","القارعة"],[102,"At-Takathur","التكاثر"],
+  [103,"Al-'Asr","العصر"],[104,"Al-Humazah","الهمزة"],[105,"Al-Fil","الفيل"],
+  [106,"Quraysh","قريش"],[107,"Al-Ma'un","الماعون"],[108,"Al-Kawthar","الكوثر"],
+  [109,"Al-Kafirun","الكافرون"],[110,"An-Nasr","النصر"],[111,"Al-Masad","المسد"],
+  [112,"Al-Ikhlas","الإخلاص"],[113,"Al-Falaq","الفلق"],[114,"An-Nas","الناس"],
+];
+
+/* ── AUDIO PLAYER ────────────────────────────────── */
+let curAudio=null,curAudioBtn=null;
+function playAudio(n,btn){
+  if(curAudio){
+    curAudio.pause();curAudio.currentTime=0;
+    if(curAudioBtn){curAudioBtn.textContent="▶";curAudioBtn.classList.remove("playing");}
+    if(curAudioBtn===btn){curAudio=null;curAudioBtn=null;return;}
+  }
+  const url=`https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${n}.mp3`;
+  curAudio=new Audio(url);curAudioBtn=btn;
+  btn.textContent="⏸";btn.classList.add("playing");
+  curAudio.play().catch(()=>{btn.textContent="▶";btn.classList.remove("playing");curAudio=null;curAudioBtn=null;});
+  curAudio.onended=()=>{btn.textContent="▶";btn.classList.remove("playing");curAudio=null;curAudioBtn=null;};
+  curAudio.onerror=()=>{btn.textContent="▶";btn.classList.remove("playing");curAudio=null;curAudioBtn=null;};
+}
+
+function renderSurahs(){
+  document.getElementById("surahList").innerHTML=SURAHS.map(([n,en,ar])=>`
+    <div class="surah-item">
+      <div class="surah-num">${n}</div>
+      <div class="surah-name" style="flex:1">${en}</div>
+      <div class="surah-arabic" style="margin-right:8px">${ar}</div>
+      <button class="audio-btn" onclick="playAudio(${n},this)" title="Play recitation">▶</button>
+    </div>`).join("");
+}
+
+/* ── 99 NAMES OF ALLAH ───────────────────────────── */
+const NAMES99=[
+  [1,"Ar-Rahman","الرحمن","The Most Gracious"],
+  [2,"Ar-Rahim","الرحيم","The Most Merciful"],
+  [3,"Al-Malik","الملك","The King"],
+  [4,"Al-Quddus","القدوس","The Most Holy"],
+  [5,"As-Salam","السلام","The Source of Peace"],
+  [6,"Al-Mu'min","المؤمن","The Guardian of Faith"],
+  [7,"Al-Muhaymin","المهيمن","The Protector"],
+  [8,"Al-'Aziz","العزيز","The All-Mighty"],
+  [9,"Al-Jabbar","الجبار","The Compeller"],
+  [10,"Al-Mutakabbir","المتكبر","The Majestic"],
+  [11,"Al-Khaliq","الخالق","The Creator"],
+  [12,"Al-Bari'","البارئ","The Originator"],
+  [13,"Al-Musawwir","المصور","The Fashioner"],
+  [14,"Al-Ghaffar","الغفار","The Great Forgiver"],
+  [15,"Al-Qahhar","القهار","The All-Prevailing"],
+  [16,"Al-Wahhab","الوهاب","The Supreme Bestower"],
+  [17,"Ar-Razzaq","الرزاق","The Provider"],
+  [18,"Al-Fattah","الفتاح","The Supreme Opener"],
+  [19,"Al-'Alim","العليم","The All-Knowing"],
+  [20,"Al-Qabid","القابض","The Withholder"],
+  [21,"Al-Basit","الباسط","The Extender"],
+  [22,"Al-Khafid","الخافض","The Reducer"],
+  [23,"Ar-Rafi'","الرافع","The Exalter"],
+  [24,"Al-Mu'izz","المعز","The Honorer"],
+  [25,"Al-Mudhill","المذل","The Humiliator"],
+  [26,"As-Sami'","السميع","The All-Hearing"],
+  [27,"Al-Basir","البصير","The All-Seeing"],
+  [28,"Al-Hakam","الحكم","The Judge"],
+  [29,"Al-'Adl","العدل","The Just"],
+  [30,"Al-Latif","اللطيف","The Subtle One"],
+  [31,"Al-Khabir","الخبير","The All-Aware"],
+  [32,"Al-Halim","الحليم","The Forbearing"],
+  [33,"Al-'Azim","العظيم","The Magnificent"],
+  [34,"Al-Ghafur","الغفور","The Forgiving"],
+  [35,"Ash-Shakur","الشكور","The Appreciative"],
+  [36,"Al-'Ali","العلي","The Most High"],
+  [37,"Al-Kabir","الكبير","The Most Great"],
+  [38,"Al-Hafiz","الحفيظ","The Preserver"],
+  [39,"Al-Muqit","المقيت","The Sustainer"],
+  [40,"Al-Hasib","الحسيب","The Reckoner"],
+  [41,"Al-Jalil","الجليل","The Sublime One"],
+  [42,"Al-Karim","الكريم","The Most Generous"],
+  [43,"Ar-Raqib","الرقيب","The Watchful"],
+  [44,"Al-Mujib","المجيب","The Responsive"],
+  [45,"Al-Wasi'","الواسع","The All-Encompassing"],
+  [46,"Al-Hakim","الحكيم","The All-Wise"],
+  [47,"Al-Wadud","الودود","The Loving"],
+  [48,"Al-Majid","المجيد","The Most Glorious"],
+  [49,"Al-Ba'ith","الباعث","The Resurrector"],
+  [50,"Ash-Shahid","الشهيد","The Witness"],
+  [51,"Al-Haqq","الحق","The Truth"],
+  [52,"Al-Wakil","الوكيل","The Trustee"],
+  [53,"Al-Qawi","القوي","The All-Strong"],
+  [54,"Al-Matin","المتين","The Firm One"],
+  [55,"Al-Wali","الولي","The Protecting Friend"],
+  [56,"Al-Hamid","الحميد","The All-Praiseworthy"],
+  [57,"Al-Muhsi","المحصي","The Counter"],
+  [58,"Al-Mubdi'","المبدئ","The Originator of Creation"],
+  [59,"Al-Mu'id","المعيد","The Restorer"],
+  [60,"Al-Muhyi","المحيي","The Giver of Life"],
+  [61,"Al-Mumit","المميت","The Taker of Life"],
+  [62,"Al-Hayy","الحي","The Ever-Living"],
+  [63,"Al-Qayyum","القيوم","The Self-Subsisting"],
+  [64,"Al-Wajid","الواجد","The Perceiver"],
+  [65,"Al-Majid","الماجد","The Noble"],
+  [66,"Al-Wahid","الواحد","The One"],
+  [67,"Al-Ahad","الأحد","The Unique"],
+  [68,"As-Samad","الصمد","The Eternal"],
+  [69,"Al-Qadir","القادر","The Omnipotent"],
+  [70,"Al-Muqtadir","المقتدر","The All-Powerful"],
+  [71,"Al-Muqaddim","المقدم","The Expediter"],
+  [72,"Al-Mu'akhkhir","المؤخر","The Delayer"],
+  [73,"Al-Awwal","الأول","The First"],
+  [74,"Al-Akhir","الآخر","The Last"],
+  [75,"Az-Zahir","الظاهر","The Manifest"],
+  [76,"Al-Batin","الباطن","The Hidden"],
+  [77,"Al-Wali","الوالي","The Governor"],
+  [78,"Al-Muta'ali","المتعالي","The Self Exalted"],
+  [79,"Al-Barr","البر","The Source of Goodness"],
+  [80,"At-Tawwab","التواب","The Acceptor of Repentance"],
+  [81,"Al-Muntaqim","المنتقم","The Avenger"],
+  [82,"Al-'Afuww","العفو","The Pardoner"],
+  [83,"Ar-Ra'uf","الرؤوف","The Most Kind"],
+  [84,"Malik-ul-Mulk","مالك الملك","Owner of All Sovereignty"],
+  [85,"Dhul-Jalal wal-Ikram","ذو الجلال والإكرام","Lord of Majesty and Generosity"],
+  [86,"Al-Muqsit","المقسط","The Equitable"],
+  [87,"Al-Jami'","الجامع","The Gatherer"],
+  [88,"Al-Ghani","الغني","The Self-Sufficient"],
+  [89,"Al-Mughni","المغني","The Enricher"],
+  [90,"Al-Mani'","المانع","The Withholder of Harm"],
+  [91,"Ad-Darr","الضار","The Distressor"],
+  [92,"An-Nafi'","النافع","The Propitious"],
+  [93,"An-Nur","النور","The Light"],
+  [94,"Al-Hadi","الهادي","The Guide"],
+  [95,"Al-Badi'","البديع","The Incomparable"],
+  [96,"Al-Baqi","الباقي","The Ever-Enduring"],
+  [97,"Al-Warith","الوارث","The Inheritor"],
+  [98,"Ar-Rashid","الرشيد","The Guide to the Right Path"],
+  [99,"As-Sabur","الصبور","The Patient"],
+];
+
+function renderNames(){
+  document.getElementById("namesList").innerHTML=NAMES99.map(([n,tr,ar,mn])=>`
+    <div class="name-item">
+      <div class="name-num">${n}</div>
+      <div class="name-body">
+        <div class="name-transliteration">${tr}</div>
+        <div class="name-meaning">${mn}</div>
+      </div>
+      <div class="name-arabic">${ar}</div>
+    </div>`).join("");
+}
+
+/* ── HADITH OF THE DAY ───────────────────────────── */
+const HADITHS=[
+  {t:"Actions are judged by intentions, and every person will get what they intended.",s:"Bukhari & Muslim"},
+  {t:"None of you truly believes until he loves for his brother what he loves for himself.",s:"Bukhari & Muslim"},
+  {t:"The strongest among you is the one who controls his anger.",s:"Bukhari"},
+  {t:"Smiling at your brother is an act of charity.",s:"Tirmidhi"},
+  {t:"He who does not thank people, does not thank Allah.",s:"Abu Dawud"},
+  {t:"Make things easy and do not make them difficult. Give glad tidings and do not drive people away.",s:"Bukhari"},
+  {t:"Allah does not look at your appearance or wealth, but looks at your hearts and deeds.",s:"Muslim"},
+  {t:"The best among you is the one who learns the Qur'an and teaches it.",s:"Bukhari"},
+  {t:"Speak good or remain silent.",s:"Bukhari & Muslim"},
+  {t:"A Muslim is one from whose tongue and hands the Muslims are safe.",s:"Bukhari"},
+  {t:"Cleanliness is half of faith.",s:"Muslim"},
+  {t:"Seeking knowledge is an obligation upon every Muslim.",s:"Ibn Majah"},
+  {t:"The merciful are shown mercy by Ar-Rahman. Be merciful to those on earth, and He in the heavens will be merciful to you.",s:"Tirmidhi"},
+  {t:"Every act of goodness is charity.",s:"Muslim"},
+  {t:"The most beloved of deeds to Allah are those that are most consistent, even if they are small.",s:"Bukhari & Muslim"},
+  {t:"Do not belittle any good deed, even meeting your brother with a cheerful face.",s:"Muslim"},
+  {t:"Tie your camel, then put your trust in Allah.",s:"Tirmidhi"},
+  {t:"Remove harm from the road — it is an act of charity.",s:"Muslim"},
+  {t:"Feed the hungry, visit the sick, and free the captive.",s:"Bukhari"},
+  {t:"Whoever removes a worldly hardship from a believer, Allah will remove a hardship from him on the Day of Resurrection.",s:"Muslim"},
+];
+function initHadith(){
+  const h=HADITHS[Math.floor(Date.now()/86400000)%HADITHS.length];
+  document.getElementById("hadithText").textContent=h.t;
+  document.getElementById("hadithSource").textContent="— "+h.s;
+}
+
+/* ── PRAYER TIMES — NEW YORK ─────────────────────── */
+async function initPrayerTimes(){
+  try{
+    const today=new Date().toLocaleDateString("en-US",{timeZone:"America/New_York",day:"2-digit",month:"2-digit",year:"numeric"});
+    const r=await fetch(`https://api.aladhan.com/v1/timingsByCity?city=New%20York&country=US&method=2`);
+    const d=await r.json();
+    const T=d.data.timings;
+    const prayers=["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"];
+    const now=new Date();
+    const nowMins=now.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false})
+      .split(":").reduce((h,m,i)=>i===0?+h*60:+h+ +m,0);
+    const toMins=t=>{const[h,m]=t.split(":").map(Number);return h*60+m;};
+    const fmt=t=>{
+      const[h,m]=t.split(":").map(Number);
+      const ampm=h>=12?"PM":"AM";
+      const hr=h%12||12;
+      return`${hr}:${String(m).padStart(2,"0")} ${ampm}`;
+    };
+    const nextIdx=prayers.findIndex(p=>toMins(T[p])>nowMins);
+    const widget=document.getElementById("prayerWidget");
+    const row=document.getElementById("prayerRow");
+    row.innerHTML=prayers.map((p,i)=>`
+      <div class="prayer-item">
+        <div class="prayer-name">${p}</div>
+        <div class="prayer-time${i===nextIdx?" next-prayer":""}">${fmt(T[p])}</div>
+      </div>`).join("");
+    document.getElementById("prayerLoc").textContent="New York · "+today;
+    widget.style.display="";
+  }catch{}
+}
+
+/* ── QIBLA ───────────────────────────────────────── */
+async function initQibla(){
+  try{
+    const r=await fetch("https://api.aladhan.com/v1/qibla/40.7128/-74.0060");
+    const d=await r.json();
+    const deg=d.data.direction;
+    const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+    const cardinal=dirs[Math.round(deg/22.5)%16];
+    document.getElementById("qiblaNeedle").style.transform=`rotate(${deg}deg)`;
+    document.getElementById("qiblaDeg").textContent=`${Math.round(deg)}° ${cardinal}`;
+    document.getElementById("qiblaWidget").style.display="";
+  }catch{}
+}
+
+function scheduleMidnightRefresh(){
+  const now=new Date();
+  const nyNow=new Date(now.toLocaleString("en-US",{timeZone:"America/New_York"}));
+  const nextMidnight=new Date(nyNow);
+  nextMidnight.setHours(24,0,30,0); // 00:00:30 NY next day
+  const msUntilMidnight=nextMidnight-nyNow;
+  setTimeout(()=>{initPrayerTimes();scheduleMidnightRefresh();},msUntilMidnight);
+}
+
+/* ── ARABIC LETTERS ──────────────────────────────── */
+const ARABIC=["ا","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","ه","و","ي"];
+function renderLetters(){
+  document.getElementById("lettersGrid").innerHTML=ARABIC.map(l=>`<div class="letter-cell">${l}</div>`).join("");
+}
+
+function resetProgress(){
+  if(confirm("Reset all progress? This cannot be undone.")){
+    localStorage.removeItem("qq_leaderboard");
+    renderProgress();
+    alert("Progress reset.");
+  }
+}
+
+/* ── INIT ────────────────────────────────────────── */
+renderSurahs();renderLetters();renderNames();initHadith();initPrayerTimes();initQibla();scheduleMidnightRefresh();initTheme();
+// restore sound pref
+(()=>{const s=localStorage.getItem("qq_sound");if(s==="0"){soundEnabled=false;const t=document.getElementById("soundToggle");if(t)t.checked=false;}})();
+</script>
+</body>
+</html>

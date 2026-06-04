@@ -1,0 +1,953 @@
+''سورة الفاتحة' 'Game
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Qur’an Quest — 2 Teams (Upgraded Option 1)</title>
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --panel:#0b1220; --border:#243244;
+      --text:#e2e8f0; --muted:#94a3b8;
+      --good:#34d399; --bad:#fb7185; --accent:#60a5fa;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; padding:18px;
+      background:var(--bg); color:var(--text);
+      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display:flex; justify-content:center; align-items:center;
+    }
+    .card{
+      width:min(1040px, 98vw);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    h1{margin:0 0 10px; font-size:20px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{
+      border:none; border-radius:14px;
+      background:#1f2937; color:var(--text);
+      padding:11px 14px; font-size:15px;
+      cursor:pointer; user-select:none;
+      transition:transform .05s ease, filter .12s ease, background .12s ease;
+    }
+    .btn:active{transform:scale(.99)}
+    .btn:disabled{opacity:.55; cursor:not-allowed}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:14px;
+      border:1px solid #2b3b52; background:var(--panel);
+      color:var(--muted); font-size:13px;
+    }
+    .pill input, .pill select{
+      padding:6px 8px; border-radius:10px;
+      border:1px solid #2b3b52; background:#0b1220; color:var(--text);
+      outline:none;
+    }
+
+    .grid{
+      display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px;
+    }
+    @media(min-width: 900px){
+      .grid{grid-template-columns: 1.3fr 1fr}
+    }
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+    }
+    .panel h2{
+      margin:0 0 8px; font-size:13px; color:var(--muted);
+      font-weight:700; letter-spacing:.2px;
+    }
+
+    .teams{display:grid; grid-template-columns:1fr; gap:10px;}
+    @media(min-width: 700px){ .teams{grid-template-columns:1fr 1fr;} }
+    .teamBox{padding:12px; border-radius:16px; border:1px solid var(--border); background:#0b1220;}
+    .teamHead{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+    .teamName{font-weight:800; font-size:16px}
+    .small{color:var(--muted); font-size:12px}
+    .activeGlow{border-color:var(--accent); box-shadow: 0 0 0 2px rgba(96,165,250,.16) inset;}
+
+    .barOuter{
+      margin-top:10px; height:16px; border-radius:999px;
+      border:1px solid #2b3b52; background:#071022; overflow:hidden;
+    }
+    .barInner{
+      height:100%; width:100%; border-radius:999px;
+      background:linear-gradient(90deg, rgba(52,211,153,.95), rgba(96,165,250,.7));
+      transition:width .25s ease;
+    }
+    .barInner.warn{
+      background:linear-gradient(90deg, rgba(250,204,21,.95), rgba(251,113,133,.7));
+    }
+    .barInner.danger{
+      background:linear-gradient(90deg, rgba(251,113,133,.95), rgba(239,68,68,.7));
+    }
+
+    .pads{display:flex; gap:10px; margin-top:10px}
+    .pad{
+      flex:1; min-width:90px; font-size:28px; padding:16px 0;
+      border-radius:16px; border:1px solid #2b3b52; background:#1f2937;
+    }
+    .pad.flash{filter:brightness(1.8); background:#334155; border-color:var(--accent);}
+
+    .status{
+      margin-top:10px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#071022;
+      padding:12px;
+      line-height:1.35;
+    }
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .muted{color:var(--muted)}
+
+    .quiz{display:none; margin-top:10px;}
+    .qText{margin:0 0 10px; font-size:15px; line-height:1.35}
+    .answers{display:grid; grid-template-columns:1fr; gap:8px;}
+    @media(min-width: 650px){ .answers{grid-template-columns:1fr 1fr;} }
+    .answerBtn{
+      text-align:left; width:100%;
+      border-radius:14px; border:1px solid #2b3b52;
+      background:#111827; color:var(--text);
+      padding:10px 12px; cursor:pointer;
+    }
+    .answerBtn:disabled{opacity:.55; cursor:not-allowed}
+
+    .explain{
+      display:none;
+      margin-top:10px;
+      border:1px solid #2b3b52;
+      border-radius:14px;
+      background:#081225;
+      padding:10px 12px;
+      color:#cbd5e1;
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .powersRow{display:flex; gap:10px; flex-wrap:wrap}
+    .powerBtn{
+      border-radius:14px; border:1px solid #2b3b52;
+      background:#0b1220; color:var(--text);
+      padding:10px 12px; cursor:pointer;
+      display:flex; gap:8px; align-items:center;
+    }
+    .powerBtn:disabled{opacity:.5; cursor:not-allowed}
+    .powerTag{font-size:12px; color:var(--muted)}
+    .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; color:#cbd5e1}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Qur’an Quest — Option 1 (Upgraded: Difficulty Choice + Explanations + Freeze + Light)</h1>
+
+    <div class="row">
+      <button id="startTurnBtn" class="btn">Start Turn</button>
+      <button id="resetBtn" class="btn">Reset</button>
+      <button id="switchTeamBtn" class="btn">Switch Team</button>
+      <button id="toggleQuizBtn" class="btn">Questions: ON</button>
+      <button id="toggleStrictBtn" class="btn" title="If ON, first mistake ends turn immediately">Strict: OFF</button>
+
+      <span class="pill">
+        Question Difficulty
+        <select id="difficultySelect">
+          <option value="auto">Auto (by round)</option>
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </span>
+
+      <span class="pill">
+        Damage Scale
+        <input id="damageInput" type="number" min="1" max="3" step="0.5" value="1" />
+        <span class="muted">(1 = normal)</span>
+      </span>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Iman Bars</h2>
+
+        <div class="teams">
+          <div id="teamABox" class="teamBox activeGlow">
+            <div class="teamHead">
+              <div class="teamName">Team A</div>
+              <div class="small">Iman: <b id="lifeA">100</b>%</div>
+            </div>
+            <div class="barOuter"><div id="barA" class="barInner"></div></div>
+            <div class="small" id="buffA">Buffs: —</div>
+            <div class="small" id="metaA">Freeze: — | Revive: ✅</div>
+          </div>
+
+          <div id="teamBBox" class="teamBox">
+            <div class="teamHead">
+              <div class="teamName">Team B</div>
+              <div class="small">Iman: <b id="lifeB">100</b>%</div>
+            </div>
+            <div class="barOuter"><div id="barB" class="barInner"></div></div>
+            <div class="small" id="buffB">Buffs: —</div>
+            <div class="small" id="metaB">Freeze: — | Revive: ✅</div>
+          </div>
+        </div>
+
+        <div class="status" id="status">
+          Press <b>Start Turn</b>. Team A begins. Survive by learning.
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h2>Power-ups (Keep all original + add new)</h2>
+          <div class="powersRow">
+            <button id="pShield" class="powerBtn" title="Block next damage">
+              🛡️ Shield <span class="powerTag">(1)</span>
+            </button>
+            <button id="pHeal" class="powerBtn" title="Instant +20% Iman (max 100)">
+              💚 Heal +20 <span class="powerTag">(1)</span>
+            </button>
+            <button id="pSkip" class="powerBtn" title="Skip the question gate and keep reward">
+              🧠 Skip Question <span class="powerTag">(1)</span>
+            </button>
+            <button id="pSabr" class="powerBtn" title="Half damage for this turn">
+              🌿 Sabr Mode <span class="powerTag">(1)</span>
+            </button>
+            <button id="pHint" class="powerBtn" title="Replay sequence once, costs -5% Iman">
+              🔁 Hint (Replay) <span class="powerTag">(1)</span>
+            </button>
+
+            <!-- NEW POWERS -->
+            <button id="pFreeze" class="powerBtn" title="Opponent’s next turn: faster playback + extra damage">
+              ❄️ Freeze Opponent <span class="powerTag">(1)</span>
+            </button>
+            <button id="pLight" class="powerBtn" title="Full heal to 100% (rare)">
+              🌟 Light of Qur’an <span class="powerTag">(0)</span>
+            </button>
+          </div>
+
+          <div class="small muted" style="margin-top:8px;">
+            Difficulty auto-scales by round unless you choose a fixed difficulty.
+            <span class="kbd">1–3 Easy</span>, <span class="kbd">4–6 Medium</span>, <span class="kbd">7+ Hard</span>.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Round</h2>
+        <div class="row">
+          <span class="pill">Round: <b id="round">0</b></span>
+          <span class="pill">Auto Difficulty: <b id="autoDiff">—</b></span>
+          <span class="pill">Streak: <b id="streak">0</b></span>
+        </div>
+
+        <div class="pads">
+          <button class="btn pad" data-n="1">1</button>
+          <button class="btn pad" data-n="2">2</button>
+          <button class="btn pad" data-n="3">3</button>
+        </div>
+
+        <div id="quizBox" class="quiz panel">
+          <h2>Question Gate</h2>
+          <p class="qText" id="qText"></p>
+          <div class="answers" id="answers"></div>
+          <div class="small" id="qFeedback">Pick an answer.</div>
+          <div class="explain" id="explainBox"></div>
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h2>Learning-first loop</h2>
+          <div class="small">
+            ✅ Pattern → Question → if correct, you go deeper (round increases).<br>
+            ❌ Wrong question ends your turn (opponent’s turn).<br>
+            ❌ Pattern mistake damages you and passes the turn.<br>
+            💡 Explanations show after each question for learning.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ----------------------- Question Banks with Explanations ----------------------- */
+const Q_EASY = [
+  { q:"How many obligatory (fard) prayers are there daily?",
+    choices:["3","5","7","10"], correct:1,
+    explain:"There are 5 daily fard prayers: Fajr, Dhuhr, Asr, Maghrib, and Isha." },
+  { q:"What is the month Muslims fast in?",
+    choices:["Muharram","Ramadan","Rabi' al-Awwal","Dhul Hijjah"], correct:1,
+    explain:"Fasting in Ramadan is an obligation for eligible Muslims." },
+  { q:"What is the direction of prayer called?",
+    choices:["Qiblah","Mihrab","Minbar","Iqamah"], correct:0,
+    explain:"Qiblah is the direction Muslims face in Salah (toward the Ka'bah in Makkah)." },
+  { q:"How many surahs are in the Qur’an?",
+    choices:["100","114","120","124"], correct:1,
+    explain:"The Qur’an contains 114 surahs (chapters)." },
+  { q:"Where is the Ka'bah located?",
+    choices:["Makkah","Madinah","Jerusalem","Ta'if"], correct:0,
+    explain:"The Ka'bah is in Masjid al-Haram in Makkah." },
+  { q:"What is the first surah of the Qur’an?",
+    choices:["Al-Baqarah","Al-Fatihah","An-Nas","Al-Kawthar"], correct:1,
+    explain:"Al-Fatihah is the opening chapter and is recited in every rak'ah of Salah." },
+];
+
+const Q_MED = [
+  { q:"Which is the longest surah in the Qur’an?",
+    choices:["Al-Baqarah","Yasin","Al-Fatihah","Al-Ikhlas"], correct:0,
+    explain:"Al-Baqarah is the longest surah (chapter) in the Qur’an." },
+  { q:"What is the Arabic term for washing before prayer?",
+    choices:["Wudu","Tawaf","Adhan","Khutbah"], correct:0,
+    explain:"Wudu is ritual ablution done before prayer (when required)." },
+  { q:"How many rak'ah are in Fajr?",
+    choices:["2","3","4","5"], correct:0,
+    explain:"Fajr has 2 fard rak'ah (and also sunnah before it)." },
+  { q:"Which surah is called 'The Sincerity'?",
+    choices:["Al-Ikhlas","Al-Falaq","An-Nas","Al-Masad"], correct:0,
+    explain:"Al-Ikhlas emphasizes pure monotheism (Tawhid)." },
+  { q:"What is the day of congregational Friday prayer called?",
+    choices:["Eid","Jumu'ah","Laylat al-Qadr","Ashura"], correct:1,
+    explain:"Jumu'ah is the Friday congregational prayer." },
+];
+
+const Q_HARD = [
+  { q:"Which surah is called 'The Daybreak' and recited for protection?",
+    choices:["Al-Falaq","Al-Ikhlas","Al-Masad","Al-Qari'ah"], correct:0,
+    explain:"Al-Falaq is commonly recited for protection along with An-Nas." },
+  { q:"Which prayer is performed at midday?",
+    choices:["Dhuhr","Fajr","Maghrib","Isha"], correct:0,
+    explain:"Dhuhr is the midday prayer (after the sun passes its peak)." },
+  { q:"Which of these is NOT one of the Five Pillars?",
+    choices:["Salah","Zakat","Sawm","Tafsir"], correct:3,
+    explain:"Tafsir is Qur’anic interpretation, but it’s not one of the five pillars." },
+  { q:"Which is a major form of ritual purification (when required)?",
+    choices:["Ghusl","Adhan","Dhikr","Sadaqah"], correct:0,
+    explain:"Ghusl is a full-body ritual bath required in certain cases." },
+];
+
+/* ----------------------- Helpers ----------------------- */
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function computeAutoDifficulty(r){
+  if(r<=3) return "Easy";
+  if(r<=6) return "Medium";
+  return "Hard";
+}
+function pickQuestion(diff){
+  const bank = diff==="Easy" ? Q_EASY : diff==="Medium" ? Q_MED : Q_HARD;
+  const base = bank[Math.floor(Math.random()*bank.length)];
+  const labeled = base.choices.map((t,i)=>({t, ok:i===base.correct}));
+  shuffle(labeled);
+  return {
+    q: base.q,
+    choices: labeled.map(x=>x.t),
+    correct: labeled.findIndex(x=>x.ok),
+    diff,
+    explain: base.explain
+  };
+}
+
+/* ----------------------- Sound ----------------------- */
+let audioCtx=null;
+function beep(freq=440, ms=120){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.frequency.value=freq; o.type="sine";
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime+0.01);
+    o.start();
+    setTimeout(()=>{
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+0.02);
+      o.stop(audioCtx.currentTime+0.03);
+    }, ms);
+  }catch{}
+}
+const toneMap={1:392,2:494,3:659};
+
+/* ----------------------- UI refs ----------------------- */
+const pads = Array.from(document.querySelectorAll(".pad"));
+const startTurnBtn = document.getElementById("startTurnBtn");
+const resetBtn = document.getElementById("resetBtn");
+const switchTeamBtn = document.getElementById("switchTeamBtn");
+const toggleQuizBtn = document.getElementById("toggleQuizBtn");
+const toggleStrictBtn = document.getElementById("toggleStrictBtn");
+const damageInput = document.getElementById("damageInput");
+const difficultySelect = document.getElementById("difficultySelect");
+
+const statusEl = document.getElementById("status");
+const roundEl = document.getElementById("round");
+const autoDiffEl = document.getElementById("autoDiff");
+const streakEl = document.getElementById("streak");
+
+const teamABox = document.getElementById("teamABox");
+const teamBBox = document.getElementById("teamBBox");
+const lifeAEl = document.getElementById("lifeA");
+const lifeBEl = document.getElementById("lifeB");
+const barA = document.getElementById("barA");
+const barB = document.getElementById("barB");
+const buffA = document.getElementById("buffA");
+const buffB = document.getElementById("buffB");
+const metaA = document.getElementById("metaA");
+const metaB = document.getElementById("metaB");
+
+const quizBox = document.getElementById("quizBox");
+const qText = document.getElementById("qText");
+const answersEl = document.getElementById("answers");
+const qFeedback = document.getElementById("qFeedback");
+const explainBox = document.getElementById("explainBox");
+
+const pShield = document.getElementById("pShield");
+const pHeal = document.getElementById("pHeal");
+const pSkip = document.getElementById("pSkip");
+const pSabr = document.getElementById("pSabr");
+const pHint = document.getElementById("pHint");
+const pFreeze = document.getElementById("pFreeze");
+const pLight = document.getElementById("pLight");
+
+/* ----------------------- Game State ----------------------- */
+let active="A";
+let life={A:100, B:100};
+let locked=true;
+let awaitingQuiz=false;
+let currentQ=null;
+let questionsOn=true;
+let strict=false;
+
+let sequence=[];
+let inputIndex=0;
+
+let round=0;
+let streak=0;
+
+let buffs={
+  A:{shield:false, sabr:false, skip:false},
+  B:{shield:false, sabr:false, skip:false}
+};
+
+let powers={
+  A:{shield:1, heal:1, skip:1, sabr:1, hint:1, freeze:1, light:0},
+  B:{shield:1, heal:1, skip:1, sabr:1, hint:1, freeze:1, light:0}
+};
+
+let freezeNextTurn = {A:0, B:0};     // if >0, that team is frozen on next turn
+let reviveAvailable = {A:true, B:true}; // one-time auto revive per team
+
+function dmgScale(){
+  const v=Number(damageInput.value);
+  return Number.isFinite(v) ? v : 1;
+}
+function setStatus(html){ statusEl.innerHTML=html; }
+function setPadsEnabled(on){ pads.forEach(p=>p.disabled=!on); }
+function setAnswerButtonsEnabled(on){
+  Array.from(document.querySelectorAll(".answerBtn")).forEach(b=>b.disabled=!on);
+}
+function updateActiveGlow(){
+  teamABox.classList.toggle("activeGlow", active==="A");
+  teamBBox.classList.toggle("activeGlow", active==="B");
+}
+function updateBars(){
+  const a=clamp(life.A,0,100), b=clamp(life.B,0,100);
+  lifeAEl.textContent=a; lifeBEl.textContent=b;
+  barA.style.width=a+"%"; barB.style.width=b+"%";
+
+  barA.classList.toggle("warn", a<=50 && a>25);
+  barA.classList.toggle("danger", a<=25);
+  barB.classList.toggle("warn", b<=50 && b>25);
+  barB.classList.toggle("danger", b<=25);
+
+  const showBuffs = (t) => {
+    const list=[];
+    if(buffs[t].shield) list.push("Shield");
+    if(buffs[t].sabr) list.push("Sabr");
+    if(buffs[t].skip) list.push("SkipReady");
+    return list.length? list.join(", ") : "—";
+  };
+  buffA.textContent="Buffs: "+showBuffs("A");
+  buffB.textContent="Buffs: "+showBuffs("B");
+
+  metaA.textContent = `Freeze: ${freezeNextTurn.A>0 ? "❄️ next turn" : "—"} | Revive: ${reviveAvailable.A ? "✅" : "❌"}`;
+  metaB.textContent = `Freeze: ${freezeNextTurn.B>0 ? "❄️ next turn" : "—"} | Revive: ${reviveAvailable.B ? "✅" : "❌"}`;
+}
+
+function updatePowerButtons(){
+  const p=powers[active];
+  pShield.querySelector(".powerTag").textContent=`(${p.shield})`;
+  pHeal.querySelector(".powerTag").textContent=`(${p.heal})`;
+  pSkip.querySelector(".powerTag").textContent=`(${p.skip})`;
+  pSabr.querySelector(".powerTag").textContent=`(${p.sabr})`;
+  pHint.querySelector(".powerTag").textContent=`(${p.hint})`;
+  pFreeze.querySelector(".powerTag").textContent=`(${p.freeze})`;
+  pLight.querySelector(".powerTag").textContent=`(${p.light})`;
+
+  const disabled = locked || awaitingQuiz;
+  pShield.disabled = disabled || p.shield<=0;
+  pHeal.disabled   = disabled || p.heal<=0;
+  pSkip.disabled   = disabled || p.skip<=0;
+  pSabr.disabled   = disabled || p.sabr<=0;
+  pHint.disabled   = disabled || p.hint<=0;
+  pFreeze.disabled = disabled || p.freeze<=0;
+  pLight.disabled  = disabled || p.light<=0;
+}
+
+function hideQuiz(){
+  quizBox.style.display="none";
+  answersEl.innerHTML="";
+  qText.textContent="";
+  qFeedback.textContent="Pick an answer.";
+  explainBox.style.display="none";
+  explainBox.textContent="";
+  awaitingQuiz=false;
+  currentQ=null;
+}
+
+function showExplain(text){
+  explainBox.style.display="block";
+  explainBox.textContent = "Explanation: " + text;
+}
+
+/* ----------------------- Damage / Heal + Revive ----------------------- */
+function applyHeal(team, amount){
+  life[team]=clamp(life[team]+amount, 0, 100);
+  updateBars();
+}
+function maybeRevive(team){
+  if(life[team] > 0) return false;
+  if(!reviveAvailable[team]) return false;
+  reviveAvailable[team]=false;
+  life[team]=30; // revive to 30%
+  updateBars();
+  setStatus(`<span class="good">Revive!</span> Team ${team} returns to <b>30%</b> Iman (one-time).`);
+  return true;
+}
+function applyDamage(team, amount, reason){
+  amount = Math.round(amount * dmgScale());
+
+  // Freeze effect makes damage harsher on that team's turn
+  // (we apply it dynamically by tracking a per-turn flag below; this remains simple.)
+
+  // Shield blocks once
+  if(buffs[team].shield){
+    buffs[team].shield=false;
+    updateBars();
+    return 0;
+  }
+  // Sabr halves damage for this turn
+  if(buffs[team].sabr){
+    amount = Math.ceil(amount/2);
+  }
+  life[team]=clamp(life[team]-amount, 0, 100);
+  updateBars();
+
+  // auto revive check
+  if(life[team] <= 0){
+    if(maybeRevive(team)) return amount; // revived
+  }
+  return amount;
+}
+
+/* ----------------------- Turn / Round logic ----------------------- */
+function computeEffectiveDifficulty(){
+  const choice = difficultySelect.value;
+  if(choice !== "auto") return choice;
+  return computeAutoDifficulty(round);
+}
+
+function addStep(){
+  const n=1+Math.floor(Math.random()*3);
+  sequence.push(n);
+  round = sequence.length;
+  roundEl.textContent=String(round);
+
+  const autoD = computeAutoDifficulty(round);
+  autoDiffEl.textContent=autoD;
+}
+
+function checkGameEnd(){
+  if(life.A<=0 || life.B<=0){
+    locked=true; setPadsEnabled(false); hideQuiz(); updatePowerButtons();
+    const winner = life.A>0 ? "Team A" : life.B>0 ? "Team B" : "No one";
+    setStatus(`<span class="good">${winner} wins!</span> One team reached <b>0%</b>. Press <b>Reset</b> to play again.`);
+    return true;
+  }
+  return false;
+}
+
+function switchTeam(){
+  active = active==="A" ? "B" : "A";
+  updateActiveGlow();
+  updateBars();
+  updatePowerButtons();
+}
+
+/* ----------------------- Sequence play (Freeze affects speed) ----------------------- */
+async function flashPad(n, duration=240){
+  const pad=pads.find(p=>Number(p.dataset.n)===n);
+  if(!pad) return;
+  pad.classList.add("flash");
+  beep(toneMap[n]||440, Math.max(90, duration-80));
+  await new Promise(r=>setTimeout(r,duration));
+  pad.classList.remove("flash");
+  await new Promise(r=>setTimeout(r,90));
+}
+
+async function playSequence(){
+  locked=true;
+  setPadsEnabled(false);
+  hideQuiz();
+  updatePowerButtons();
+
+  const frozen = freezeNextTurn[active] > 0;
+  if(frozen) freezeNextTurn[active] = 0; // consume freeze now
+
+  const speed = frozen ? 150 : 240; // faster playback if frozen
+  setStatus(`Watch the sequence… <span class="good">Team ${active}</span>${frozen ? " <span class='bad'>(FROZEN)</span>" : ""}`);
+
+  for(const n of sequence) await flashPad(n, speed);
+
+  inputIndex=0;
+  locked=false;
+  setPadsEnabled(true);
+  updatePowerButtons();
+  setStatus(`Your turn: repeat with <b>1</b>, <b>2</b>, <b>3</b>.`);
+}
+
+/* ----------------------- Rewards for correct answers ----------------------- */
+function awardForCorrect(diff){
+  const heals = {Easy:5, Medium:10, Hard:15};
+  applyHeal(active, heals[diff]);
+
+  streak += 1;
+  streakEl.textContent = String(streak);
+
+  // Original rewards kept + slight extension:
+  if(diff==="Easy"){
+    if(streak % 3 === 0) powers[active].hint += 1;
+  } else if(diff==="Medium"){
+    if(streak % 2 === 0) powers[active].shield += 1;
+    if(streak % 4 === 0) powers[active].skip += 1;
+  } else {
+    // Hard correct gives stronger rewards:
+    powers[active].heal += 1;
+    powers[active].sabr += 1;
+
+    // Rare chance to earn "Light of Qur’an" (or guaranteed at streak 3 on Hard)
+    if(streak % 3 === 0) powers[active].light += 1;
+  }
+  updatePowerButtons();
+}
+
+/* ----------------------- Gate after pattern ----------------------- */
+async function onPatternComplete(){
+  locked=true;
+  setPadsEnabled(false);
+  updatePowerButtons();
+
+  const diff = computeEffectiveDifficulty();
+
+  if(!questionsOn || buffs[active].skip){
+    buffs[active].skip=false;
+    awardForCorrect(diff);
+    setStatus(`<span class="good">Turn cleared!</span> ${questionsOn ? "Skip used." : "Questions OFF."} +Iman +Streak.`);
+    await new Promise(r=>setTimeout(r,550));
+    addStep();
+    if(checkGameEnd()) return;
+    await playSequence();
+    return;
+  }
+
+  setStatus(`<span class="good">Pattern cleared!</span> Answer to continue.`);
+  const q = pickQuestion(diff);
+  showQuiz(q);
+  updatePowerButtons();
+}
+
+function showQuiz(q){
+  quizBox.style.display="block";
+  answersEl.innerHTML="";
+  qText.textContent = `(${q.diff}) ${q.q}`;
+  qFeedback.textContent="Pick an answer.";
+  explainBox.style.display="none";
+  explainBox.textContent="";
+  awaitingQuiz=true;
+  currentQ=q;
+
+  q.choices.forEach((choice, idx)=>{
+    const b=document.createElement("button");
+    b.className="answerBtn";
+    b.textContent=choice;
+    b.addEventListener("click", ()=>handleAnswer(idx));
+    answersEl.appendChild(b);
+  });
+}
+
+/* ----------------------- Answer handling ----------------------- */
+async function handleAnswer(idx){
+  if(!awaitingQuiz || !currentQ) return;
+  setAnswerButtonsEnabled(false);
+
+  const diff=currentQ.diff;
+  const wrongDamage = {Easy:10, Medium:15, Hard:25};
+
+  if(idx === currentQ.correct){
+    beep(740,120);
+    qFeedback.innerHTML = `<span class="good">Correct!</span> You gain Iman and power progress.`;
+    showExplain(currentQ.explain);
+
+    awardForCorrect(diff);
+    await new Promise(r=>setTimeout(r,900));
+    hideQuiz();
+
+    addStep();
+    if(checkGameEnd()) return;
+    await playSequence();
+  } else {
+    beep(180,180);
+
+    // If player is "frozen" on their turn, wrong answer hurts extra (engagement + stakes)
+    const extra = 0; // keep simple; you can set to 5 if you want harsher freeze
+    const dmg = wrongDamage[diff] + extra;
+
+    qFeedback.innerHTML = `<span class="bad">Wrong.</span> Opportunity to learn — you take damage. Turn passes.`;
+    showExplain(currentQ.explain);
+
+    applyDamage(active, dmg, `Wrong ${diff} answer`);
+    await new Promise(r=>setTimeout(r,1100));
+    hideQuiz();
+
+    if(checkGameEnd()) return;
+
+    switchTeam();
+    locked=true;
+    setPadsEnabled(false);
+    updatePowerButtons();
+    setStatus(`Turn passed. Press <b>Start Turn</b> for <span class="good">Team ${active}</span>.`);
+  }
+}
+
+/* ----------------------- Mistakes ----------------------- */
+async function onMistake(expected, got){
+  beep(160,220);
+
+  // If opponent used Freeze on you, playback was faster; we also make mistakes slightly more punishing optionally.
+  const dmg = 10;
+
+  applyDamage(active, dmg, "Pattern mistake");
+
+  locked=true;
+  setPadsEnabled(false);
+  hideQuiz();
+  updatePowerButtons();
+
+  setStatus(`<span class="bad">Mistake!</span> Expected <b>${expected}</b> but pressed <b>${got}</b>. -${Math.round(dmg*dmgScale())}% Iman.`);
+
+  await new Promise(r=>setTimeoutTimeout(r,800)).catch(()=>{});
+}
+
+/* setTimeout helper wrapped to avoid accidental reference issues */
+function setTimeoutP(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function onMistake(expected, got){
+  beep(160,220);
+  const dmg = 10;
+  applyDamage(active, dmg, "Pattern mistake");
+
+  locked=true;
+  setPadsEnabled(false);
+  hideQuiz();
+  updatePowerButtons();
+
+  setStatus(`<span class="bad">Mistake!</span> Expected <b>${expected}</b> but pressed <b>${got}</b>. -${Math.round(dmg*dmgScale())}% Iman.`);
+
+  await setTimeoutP(850);
+
+  if(checkGameEnd()) return;
+
+  switchTeam();
+  setStatus(`Turn passed. Press <b>Start Turn</b> for <span class="good">Team ${active}</span>.`);
+}
+
+/* ----------------------- Pad input ----------------------- */
+pads.forEach(p=>{
+  p.addEventListener("click", async ()=>{
+    if(locked || awaitingQuiz) return;
+
+    const n=Number(p.dataset.n);
+    await flashPad(n, 150);
+
+    const expected=sequence[inputIndex];
+    if(n !== expected){
+      await onMistake(expected, n);
+      return;
+    }
+
+    inputIndex++;
+    if(inputIndex >= sequence.length){
+      await onPatternComplete();
+    }
+  });
+});
+
+/* ----------------------- Power-ups ----------------------- */
+function consumePower(key){
+  if(powers[active][key] <= 0) return false;
+  powers[active][key] -= 1;
+  updatePowerButtons();
+  return true;
+}
+
+pShield.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("shield")) return;
+  buffs[active].shield = true;
+  setStatus(`<span class="good">Shield activated!</span> Blocks the next damage you would take.`);
+  updateBars();
+});
+
+pHeal.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("heal")) return;
+  applyHeal(active, 20);
+  beep(640,120);
+  setStatus(`<span class="good">Heal used!</span> +20% Iman (max 100).`);
+});
+
+pSkip.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("skip")) return;
+  buffs[active].skip = true;
+  setStatus(`<span class="good">Skip Question ready!</span> Next question gate will be skipped.`);
+  updateBars();
+});
+
+pSabr.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("sabr")) return;
+  buffs[active].sabr = true;
+  setStatus(`<span class="good">Sabr Mode!</span> Damage is halved for this turn.`);
+  updateBars();
+});
+
+pHint.addEventListener("click", async ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("hint")) return;
+
+  applyDamage(active, 5, "Hint cost");
+  setStatus(`<span class="good">Hint!</span> Replaying the sequence once (cost -5% Iman).`);
+  await setTimeoutP(300);
+
+  locked=true; setPadsEnabled(false); updatePowerButtons();
+  for(const n of sequence) await flashPad(n, 220);
+  locked=false; setPadsEnabled(true); updatePowerButtons();
+  setStatus(`Your turn continues: repeat the sequence from where you left off.`);
+});
+
+/* NEW: Freeze Opponent */
+pFreeze.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("freeze")) return;
+  const opp = active==="A" ? "B" : "A";
+  freezeNextTurn[opp] = 1;
+  beep(520,120);
+  setStatus(`<span class="good">Freeze used!</span> Team ${opp} will have a harder next turn (faster sequence playback).`);
+  updateBars();
+});
+
+/* NEW: Light of Qur’an */
+pLight.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("light")) return;
+  life[active]=100;
+  updateBars();
+  beep(820,140);
+  setStatus(`<span class="good">Light of Qur’an!</span> Team ${active} restored to <b>100%</b> Iman.`);
+});
+
+/* ----------------------- Turn Controls ----------------------- */
+async function startTurn(){
+  if(checkGameEnd()) return;
+
+  // Reset per-turn-only effect:
+  buffs[active].sabr = false;
+
+  // Start fresh sequence but keep life/powers (Option 1 behavior)
+  sequence=[];
+  round=0;
+  streak=0;
+  streakEl.textContent="0";
+  roundEl.textContent="0";
+  autoDiffEl.textContent="—";
+  hideQuiz();
+
+  addStep();
+  setStatus(`Get ready… <span class="good">Team ${active}</span> begins.`);
+  await setTimeoutP(300);
+  await playSequence();
+}
+
+startTurnBtn.addEventListener("click", startTurn);
+
+resetBtn.addEventListener("click", ()=>{
+  active="A";
+  life={A:100,B:100};
+  sequence=[]; inputIndex=0; round=0; streak=0;
+  locked=true; awaitingQuiz=false; currentQ=null;
+  questionsOn=true; strict=false;
+
+  buffs={A:{shield:false,sabr:false,skip:false},B:{shield:false,sabr:false,skip:false}};
+  powers={A:{shield:1,heal:1,skip:1,sabr:1,hint:1,freeze:1,light:0},B:{shield:1,heal:1,skip:1,sabr:1,hint:1,freeze:1,light:0}};
+  freezeNextTurn={A:0,B:0};
+  reviveAvailable={A:true,B:true};
+
+  toggleQuizBtn.textContent="Questions: ON";
+  toggleStrictBtn.textContent="Strict: OFF";
+  difficultySelect.value="auto";
+
+  hideQuiz();
+  setPadsEnabled(false);
+  updateActiveGlow();
+  updateBars();
+  roundEl.textContent="0";
+  autoDiffEl.textContent="—";
+  streakEl.textContent="0";
+  setStatus(`Reset done. Press <b>Start Turn</b>. Team A begins.`);
+  updatePowerButtons();
+});
+
+switchTeamBtn.addEventListener("click", ()=>{
+  locked=true; setPadsEnabled(false); hideQuiz();
+  switchTeam();
+  setStatus(`Switched. Press <b>Start Turn</b> for <span class="good">Team ${active}</span>.`);
+});
+
+toggleQuizBtn.addEventListener("click", ()=>{
+  questionsOn=!questionsOn;
+  toggleQuizBtn.textContent=`Questions: ${questionsOn?"ON":"OFF"}`;
+  if(!questionsOn) hideQuiz();
+});
+
+toggleStrictBtn.addEventListener("click", ()=>{
+  strict=!strict;
+  toggleStrictBtn.textContent=`Strict: ${strict?"ON":"OFF"}`;
+});
+
+/* init */
+setPadsEnabled(false);
+updateActiveGlow();
+updateBars();
+updatePowerButtons();
+</script>
+</body>
+</html>
