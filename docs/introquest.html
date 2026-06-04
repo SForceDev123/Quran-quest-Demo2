@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qur’an Quest</title>
+  <style>
+    body{margin:0;background:#0f172a;color:#fff;font-family:system-ui,-apple-system,sans-serif;padding:16px}
+    .card{max-width:520px;margin:12px auto;background:#111827;border-radius:16px;padding:16px}
+    .muted{opacity:.85}
+    button{width:100%;padding:14px;border:0;border-radius:12px;margin:8px 0;font-size:16px;font-weight:700;cursor:pointer}
+    .primary{background:#22c55e;color:#06210f}
+    .secondary{background:#334155;color:#fff}
+    input{width:100%;padding:14px;border-radius:12px;border:1px solid #334155;background:#0b1220;color:#fff;font-size:16px}
+    .pill{display:inline-block;background:#0b1220;border:1px solid #334155;padding:8px 10px;border-radius:999px;font-size:14px}
+  </style>
+</head>
+
+<body>
+
+  <!-- MAIN DASHBOARD -->
+  <section id="menuScreen" class="card">
+    <h1>📖 Qur’an Quest</h1>
+    <p class="muted">Pick a mode:</p>
+
+    <button class="primary" id="startBtn">🟢 Start Game</button>
+    <button class="secondary" id="surahBtn">📖 Surahs</button>
+    <button class="secondary" id="progressBtn">🏆 Progress</button>
+    <button class="secondary" id="settingsBtn">⚙️ Settings</button>
+    <button class="secondary" id="triviaBtn">🧠 Trivia (Questions)</button>
+    <button class="secondary" id="lettersBtn">🔤 Arabic Letters</button>
+  </section>
+
+  <!-- NAME ENTRY -->
+  <section id="nameScreen" class="card" style="display:none;">
+    <h2>Enter your name</h2>
+    <input id="nameInput" maxlength="16" placeholder="e.g., Jose" />
+    <button class="primary" id="continueBtn">Continue</button>
+    <button class="secondary" id="backFromNameBtn">Back</button>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="gameScreen" class="card" style="display:none;">
+    <h2>Game Mode ✅</h2>
+    <div class="pill">Player: <span id="playerLabel">—</span></div>
+    <p class="muted" style="margin-top:10px">If you can see this screen, your “start game” flow works.</p>
+    <button class="secondary" id="exitGameBtn">Exit to Menu</button>
+  </section>
+
+  <!-- OTHER SCREENS (placeholders) -->
+  <section id="surahScreen" class="card" style="display:none;">
+    <h2>📖 Surahs</h2>
+    <button class="secondary" onclick="go('menuScreen')">Back</button>
+  </section>
+
+  <section id="progressScreen" class="card" style="display:none;">
+    <h2>🏆 Progress</h2>
+    <button class="secondary" onclick="go('menuScreen')">Back</button>
+  </section>
+
+  <section id="settingsScreen" class="card" style="display:none;">
+    <h2>⚙️ Settings</h2>
+    <button class="secondary" onclick="go('menuScreen')">Back</button>
+  </section>
+
+  <section id="triviaScreen" class="card" style="display:none;">
+    <h2>🧠 Trivia</h2>
+    <button class="secondary" onclick="go('menuScreen')">Back</button>
+  </section>
+
+  <section id="lettersScreen" class="card" style="display:none;">
+    <h2>🔤 Arabic Letters</h2>
+    <button class="secondary" onclick="go('menuScreen')">Back</button>
+  </section>
+
+  <script>
+    // IMPORTANT: script is AFTER HTML, so IDs exist.
+
+    const screens = [
+      "menuScreen","nameScreen","gameScreen",
+      "surahScreen","progressScreen","settingsScreen",
+      "triviaScreen","lettersScreen"
+    ];
+
+    function go(screenId){
+      screens.forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === screenId ? "block" : "none");
+      });
+    }
+
+    function startGame(){
+      const name = document.getElementById("nameInput").value.trim();
+      if(!name){
+        alert("Please enter your name to start.");
+        return;
+      }
+      document.getElementById("playerLabel").textContent = name;
+      go("gameScreen");
+
+      // ✅ If you have your real game init function, call it here:
+      // initGame();
+      // startRound();
+    }
+
+    // Wire buttons
+    document.getElementById("startBtn").addEventListener("click", ()=>go("nameScreen"));
+    document.getElementById("continueBtn").addEventListener("click", startGame);
+    document.getElementById("backFromNameBtn").addEventListener("click", ()=>go("menuScreen"));
+    document.getElementById("exitGameBtn").addEventListener("click", ()=>go("menuScreen"));
+
+    document.getElementById("surahBtn").addEventListener("click", ()=>go("surahScreen"));
+    document.getElementById("progressBtn").addEventListener("click", ()=>go("progressScreen"));
+    document.getElementById("settingsBtn").addEventListener("click", ()=>go("settingsScreen"));
+    document.getElementById("triviaBtn").addEventListener("click", ()=>go("triviaScreen"));
+    document.getElementById("lettersBtn").addEventListener("click", ()=>go("lettersScreen"));
+
+    // Start on menu
+    go("menuScreen");
+  </script>
+
+</body>
+</html>

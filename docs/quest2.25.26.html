@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="en">
+<head>
+    
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>سورة الفاتحة — Qur’an Quest Game</title>
+
+  <!-- ✅ PWA hooks -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+
+  <!-- ✅ iOS Add to Home Screen polish -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Qur’an Quest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --panel:#0b1220; --border:#243244;
+      --text:#e2e8f0; --muted:#94a3b8;
+      --good:#34d399; --bad:#fb7185; --accent:#60a5fa;
+    }
+    *{box-sizing:border-box}
+    html, body{ -webkit-text-size-adjust:100%; }
+    body{
+      margin:0; min-height:100vh; padding:18px;
+      background:var(--bg); color:var(--text);
+      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display:flex; justify-content:center; align-items:flex-start;
+    }
+
+    /* ✅ Mobile comfort: bigger targets + reduce accidental zoom */
+    button, .btn, .pad, .answerBtn, .powerBtn { touch-action: manipulation; }
+
+    .card{
+      width:min(1040px, 98vw);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    h1{margin:0 0 10px; font-size:20px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{
+      border:none; border-radius:14px;
+      background:#1f2937; color:var(--text);
+      padding:11px 14px; font-size:15px;
+      cursor:pointer; user-select:none;
+      transition:transform .05s ease, filter .12s ease, background .12s ease;
+    }
+    .btn:active{transform:scale(.99)}
+    .btn:disabled{opacity:.55; cursor:not-allowed}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:14px;
+      border:1px solid #2b3b52; background:var(--panel);
+      color:var(--muted); font-size:13px;
+    }
+    .pill input, .pill select{
+      padding:6px 8px; border-radius:10px;
+      border:1px solid #2b3b52; background:#0b1220; color:var(--text);
+      outline:none;
+    }
+
+    .grid{
+      display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px;
+    }
+    @media(min-width: 900px){
+      .grid{grid-template-columns: 1.3fr 1fr}
+    }
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+    }
+    .panel h2{
+      margin:0 0 8px; font-size:13px; color:var(--muted);
+      font-weight:700; letter-spacing:.2px;
+    }
+
+    .teams{display:grid; grid-template-columns:1fr; gap:10px;}
+    @media(min-width: 700px){ .teams{grid-template-columns:1fr 1fr;} }
+    .teamBox{padding:12px; border-radius:16px; border:1px solid var(--border); background:#0b1220;}
+    .teamHead{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+    .teamName{font-weight:800; font-size:16px}
+    .small{color:var(--muted); font-size:12px}
+    .activeGlow{border-color:var(--accent); box-shadow: 0 0 0 2px rgba(96,165,250,.16) inset;}
+
+    .barOuter{
+      margin-top:10px; height:16px; border-radius:999px;
+      border:1px solid #2b3b52; background:#071022; overflow:hidden;
+    }
+    .barInner{
+      height:100%; width:100%; border-radius:999px;
+      background:linear-gradient(90deg, rgba(52,211,153,.95), rgba(96,165,250,.7));
+      transition:width .25s ease;
+    }
+    .barInner.warn{
+      background:linear-gradient(90deg, rgba(250,204,21,.95), rgba(251,113,133,.7));
+    }
+    .barInner.danger{
+      background:linear-gradient(90deg, rgba(251,113,133,.95), rgba(239,68,68,.7));
+    }
+
+    .pads{display:flex; gap:10px; margin-top:10px}
+    .pad{
+      flex:1; min-width:90px; font-size:28px; padding:16px 0;
+      border-radius:16px; border:1px solid #2b3b52; background:#1f2937;
+    }
+    .pad.flash{filter:brightness(1.8); background:#334155; border-color:var(--accent);}
+
+    .status{
+      margin-top:10px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#071022;
+      padding:12px;
+      line-height:1.35;
+    }
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .muted{color:var(--muted)}
+
+    .powersRow{display:flex; gap:10px; flex-wrap:wrap}
+    .powerBtn{
+      border-radius:14px; border:1px solid #2b3b52;
+      background:#0b1220; color:var(--text);
+      padding:10px 12px; cursor:pointer;
+      display:flex; gap:8px; align-items:center;
+    }
+    .powerBtn:disabled{opacity:.5; cursor:not-allowed}
+    .powerTag{font-size:12px; color:var(--muted)}
+
+    /* ✅ Mobile: bigger buttons */
+    @media (max-width: 520px) {
+      .card { padding: 12px; }
+      .pad { font-size: 34px; padding: 20px 0; }
+      .btn { font-size: 16px; padding: 12px 14px; }
+      .powerBtn { padding: 12px 12px; }
+    }
+
+    /* ---------------- Jeopardy-style full-screen question screen ---------------- */
+    .jq{
+      position:fixed; inset:0;
+      background:rgba(3,7,18,.92);
+      display:flex; align-items:center; justify-content:center;
+      padding:14px;
+      z-index:9999;
+    }
+    .jq.hidden{display:none}
+
+    .jqWrap{
+      width:min(820px, 96vw);
+      background:#071022;
+      border:1px solid #2b3b52;
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 14px 40px rgba(0,0,0,.45);
+    }
+
+    .jqTop{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin-bottom:10px;
+    }
+    .jqTitle{font-weight:800; color:#cbd5e1}
+    .jqTimer{
+      width:56px; height:56px;
+      border-radius:999px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; font-weight:900;
+      border:2px solid #334155;
+      background:#0b1220;
+    }
+    .jqTimer.warn{border-color:#facc15; color:#facc15}
+    .jqTimer.danger{border-color:#fb7185; color:#fb7185; transform:scale(1.02)}
+    .jqQ{
+      font-size:18px;
+      line-height:1.3;
+      font-weight:700;
+      margin:10px 0 14px;
+    }
+    .jqAns{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    @media(min-width:700px){ .jqAns{grid-template-columns:1fr 1fr;} }
+
+    .jqAns button{
+      text-align:left;
+      padding:16px 14px;
+      border-radius:16px;
+      border:1px solid #2b3b52;
+      background:#111827;
+      color:var(--text);
+      font-size:16px;
+      cursor:pointer;
+    }
+    .jqAns button:disabled{opacity:.55; cursor:not-allowed}
+
+    .jqFooter{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .jqMsg{color:var(--muted); font-size:13px}
+    .jqExplain{
+      margin-top:12px;
+      padding:12px;
+      border:1px solid #2b3b52;
+      border-radius:14px;
+      background:#081225;
+      color:#cbd5e1;
+      font-size:13px;
+      line-height:1.35;
+    }
+    .hidden{display:none}
+    
+/* ✅ Menu-only styling (does NOT affect the actual game .card/.btn layout) */
+#menuScreen, #nameScreen, #surahScreen, #triviaScreen, #lettersScreen, #progressScreen, #settingsScreen{
+  max-width: 520px;      /* menu cards stay compact */
+  width: min(520px, 98vw);
+  margin: 12px auto;
+}
+
+#menuScreen button,
+#nameScreen button,
+#surahScreen button,
+#triviaScreen button,
+#lettersScreen button,
+#progressScreen button,
+#settingsScreen button{
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 0;
+  margin: 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ✅ Only menu inputs */
+#nameScreen input{
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #0b1220;
+  color: #fff;
+  font-size: 16px;
+}
+
+/* These keep your menu button colors */
+.primary{background:#22c55e;color:#06210f}
+.secondary{background:#334155;color:#fff}
+
+/* Keep these for letters */
+.lettersGrid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+}
+.letterBtn{
+  background:#0b1220;
+  border:1px solid #334155;
+  color:#fff;
+  border-radius:12px;
+  padding:16px 0;
+  font-size:22px;
+  font-weight:800;
+}
+    
+  </style>
+</head>
+<script>
+
+    function startGame() {
+      document.getElementById("mainMenu").style.display = "none";
+      document.getElementById("gameScreen").style.display = "block";
+    }
+    
+    function openSurahs() {
+      alert("Surah selection coming soon!");
+    }
+    
+    function openProgress() {
+      alert("Progress system coming soon!");
+    }
+    
+    function openSettings() {
+      alert("Settings panel coming soon!");
+    }
+    
+    </script>
+<body>
+    <!-- MAIN DASHBOARD -->
+<section id="menuScreen" class="card">
+  <h1>📖 Qur’an Quest</h1>
+  <p class="muted">Pick a mode:</p>
+
+  <button class="primary" onclick="go('nameScreen')">🟢 Start Game</button>
+  <button class="secondary" onclick="go('surahScreen')">📖 Surahs</button>
+  <button class="secondary" onclick="go('progressScreen')">🏆 Progress</button>
+  <button class="secondary" onclick="go('settingsScreen')">⚙️ Settings</button>
+
+  <button class="secondary" onclick="go('triviaScreen')">🧠 Trivia (Questions)</button>
+  <button class="secondary" onclick="go('lettersScreen')">🔤 Arabic Letters</button>
+</section>
+
+<!-- NAME ENTRY (for Start Game) -->
+<section id="nameScreen" class="card" style="display:none;">
+  <h2>Enter your name</h2>
+  <input id="nameInput" maxlength="16" placeholder="e.g.CHALLENGER" />
+  <div style="height:10px"></div>
+  <button class="primary" onclick="startGame()">Continue</button>
+  <div style="height:10px"></div>
+  <button class="secondary" onclick="go('menuScreen')">Back</button>
+</section>
+
+<!-- GAME SCREEN (your real game goes here) -->
+
+
+<!-- SURAH SCREEN -->
+<section id="surahScreen" class="card" style="display:none;">
+  <h2>📖 Surahs</h2>
+  <p class="muted">Surah selection goes here (Level-based or list).</p>
+  <div style="height:10px"></div>
+  <button class="secondary" onclick="go('menuScreen')">Back</button>
+</section>
+
+<!-- TRIVIA SCREEN -->
+<section id="triviaScreen" class="card" style="display:none;">
+  <h2>🧠 Trivia</h2>
+  <p class="muted">Questions-only mode (no pattern game).</p>
+
+  <div id="triviaBox" class="miniCard">
+    <p id="triviaQuestion" style="margin:0 0 10px 0;">Press Start to begin trivia.</p>
+    <button class="primary" onclick="nextTrivia()">Start / Next Question</button>
+  </div>
+
+  <div style="height:10px"></div>
+  <button class="secondary" onclick="go('menuScreen')">Back</button>
+</section>
+
+<!-- ARABIC LETTERS SCREEN -->
+<section id="lettersScreen" class="card" style="display:none;">
+  <h2>🔤 Arabic Letters</h2>
+  <p class="muted">Letter practice mode.</p>
+
+  <div id="lettersGrid" class="lettersGrid"></div>
+
+  <div style="height:10px"></div>
+  <button class="secondary" onclick="go('menuScreen')">Back</button>
+</section>
+
+<!-- PROGRESS SCREEN -->
+<section id="progressScreen" class="card" style="display:none;">
+  <h2>🏆 Progress</h2>
+  <p class="muted">We’ll show streak, XP, completed surahs, and trivia stats here.</p>
+  <div style="height:10px"></div>
+  <button class="secondary" onclick="go('menuScreen')">Back</button>
+</section>
+
+<!-- SETTINGS SCREEN -->
+<section id="settingsScreen" class="card" style="display:none;">
+  <h2>⚙️ Settings</h2>
+  <p class="muted">Sound, difficulty, font size, theme, reset progress.</p>
+  <div style="height:10px"></div>
+  <button class="secondary" onclick="go('menuScreen')">Back</button>
+</section>
+    <div id="mainMenu">
+
+     
+        <div id="realGameScreen" style="display:none;">
+            <button class="btn" onclick="go('menuScreen')">⬅ Back to Menu</button>
+        <!-- ALL your existing game HTML goes here -->
+     
+  <div class="card">
+    <h1>Qur’an Quest — Pattern + Jeopardy Questions (2 Teams)</h1>
+
+    <div class="row">
+      <button id="startTurnBtn" class="btn">Start Match</button>
+      <button id="resetBtn" class="btn">Reset</button>
+      <button id="switchTeamBtn" class="btn">Switch Team</button>
+
+      <span class="pill">
+        Question Difficulty
+        <select id="difficultySelect">
+          <option value="auto">Auto (by pattern length)</option>
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </span>
+
+      <span class="pill">
+        Damage Scale
+        <input id="damageInput" type="number" min="1" max="3" step="0.5" value="1" />
+        <span class="muted">(1 = normal)</span>
+      </span>
+
+      <span class="pill">
+        Question Timer (sec)
+        <input id="timerInput" type="number" min="5" max="60" step="1" value="15" />
+      </span>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Iman Bars</h2>
+
+        <div class="teams">
+          <div id="teamABox" class="teamBox activeGlow">
+            <div class="teamHead">
+              <div class="teamName">Team A</div>
+              <div class="small">Iman: <b id="lifeA">100</b>%</div>
+            </div>
+            <div class="barOuter"><div id="barA" class="barInner"></div></div>
+            <div class="small" id="buffA">Buffs: —</div>
+            <div class="small" id="metaA">Freeze: — | Revive: ✅</div>
+          </div>
+
+          <div id="teamBBox" class="teamBox">
+            <div class="teamHead">
+              <div class="teamName">Team B</div>
+              <div class="small">Iman: <b id="lifeB">100</b>%</div>
+            </div>
+            <div class="barOuter"><div id="barB" class="barInner"></div></div>
+            <div class="small" id="buffB">Buffs: —</div>
+            <div class="small" id="metaB">Freeze: — | Revive: ✅</div>
+          </div>
+        </div>
+
+        <div class="status" id="status">
+          Press <b>Start Match</b>. Pattern starts at length <b>2</b>. After each question, teams switch and pattern length increases.
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h2>Power-ups</h2>
+          <div class="powersRow">
+            <button id="pShield" class="powerBtn" title="Block next damage">
+              🛡️ Shield <span class="powerTag">(1)</span>
+            </button>
+            <button id="pHeal" class="powerBtn" title="Instant +20% Iman (max 100)">
+              💚 Heal +20 <span class="powerTag">(1)</span>
+            </button>
+            <button id="pSkip" class="powerBtn" title="Skip the question gate and keep reward">
+              🧠 Skip Question <span class="powerTag">(1)</span>
+            </button>
+            <button id="pSabr" class="powerBtn" title="Half damage for this turn">
+              🌿 Sabr Mode <span class="powerTag">(1)</span>
+            </button>
+            <button id="pHint" class="powerBtn" title="Replay sequence once, costs -5% Iman">
+              🔁 Hint (Replay) <span class="powerTag">(1)</span>
+            </button>
+            <button id="pFreeze" class="powerBtn" title="Opponent’s next turn: faster playback">
+              ❄️ Freeze Opponent <span class="powerTag">(1)</span>
+            </button>
+            <button id="pLight" class="powerBtn" title="Full heal to 100% (rare)">
+              🌟 Light of Qur’an <span class="powerTag">(0)</span>
+            </button>
+          </div>
+
+          <div class="small muted" style="margin-top:8px;">
+            Pattern length increases after every question: <b>2 → 3 → 4…</b> (cap <b>10</b>).
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Pattern</h2>
+        <div class="row">
+          <span class="pill">Pattern Length: <b id="round">0</b></span>
+          <span class="pill">Auto Difficulty: <b id="autoDiff">—</b></span>
+          <span class="pill">Streak: <b id="streak">0</b></span>
+        </div>
+
+        <div class="pads">
+          <button class="btn pad" data-n="1">1</button>
+          <button class="btn pad" data-n="2">2</button>
+          <button class="btn pad" data-n="3">3</button>
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h2>Rules</h2>
+          <div class="small">
+            ✅ Watch pattern → repeat with 1/2/3.<br>
+            ✅ After pattern: Jeopardy question (timed).<br>
+            ✅ After question: turn ends, teams switch, next pattern starts automatically.<br>
+            ❌ Pattern mistake = damage + auto-switch + next pattern starts.<br>
+            ⏳ Timeout counts as wrong + damage + auto-switch.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Jeopardy-style full-screen question screen -->
+  <div id="jeopardyScreen" class="jq hidden" aria-hidden="true">
+    <div class="jqWrap">
+      <div class="jqTop">
+        <div class="jqTitle" id="jqTitle">Team A • Question</div>
+        <div class="jqTimer" id="jqTimer">15</div>
+      </div>
+
+      <div class="jqQ" id="jqQ">Question text…</div>
+
+      <div class="jqAns" id="jqAns"></div>
+
+      <div class="jqFooter">
+        <div class="jqMsg" id="jqMsg">Choose an answer.</div>
+      </div>
+
+      <div class="jqExplain hidden" id="jqExplain"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ✅ Service worker registration (PWA) */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+
+/* ----------------------- Question Banks (100 total) ----------------------- */
+/* Notes:
+   - “Finish the phrase” questions are short (mobile-friendly).
+   - Avoids long verse quoting; uses small phrases/surah identification.
+*/
+const Q_EASY = [
+  { q:"Who was the first person to call the Adhan?", choices:["Abu Bakr","Umar","Bilal ibn Rabah","Uthman"], correct:2, explain:"Bilal ibn Rabah (رضي الله عنه) is widely known as the first mu’adhin." },
+  { q:"In Islam, the one true religion is called…", choices:["Judaism","Christianity","Islam","Buddhism"], correct:2, explain:"Islam means submission to Allah." },
+  { q:"How many daily obligatory (fard) prayers are there?", choices:["3","5","6","7"], correct:1, explain:"The five prayers: Fajr, Dhuhr, Asr, Maghrib, Isha." },
+  { q:"Muslims fast in which month?", choices:["Rajab","Ramadan","Shawwal","Safar"], correct:1, explain:"Fasting in Ramadan is obligatory for eligible Muslims." },
+  { q:"The direction Muslims face in prayer is called…", choices:["Qiblah","Minbar","Mihrab","Iqamah"], correct:0, explain:"Qiblah is the direction toward the Ka‘bah." },
+  { q:"How many surahs are in the Qur’an?", choices:["99","114","120","144"], correct:1, explain:"The Qur’an contains 114 surahs." },
+  { q:"The first surah of the Qur’an is…", choices:["Al-Baqarah","Al-Fatihah","An-Nas","Al-Kawthar"], correct:1, explain:"Al-Fatihah is the opening chapter." },
+  { q:"The Ka‘bah is located in…", choices:["Makkah","Madinah","Jerusalem","Cairo"], correct:0, explain:"The Ka‘bah is in Masjid al-Haram in Makkah." },
+  { q:"The Islamic testimony of faith is called…", choices:["Shahadah","Salah","Zakat","Sawm"], correct:0, explain:"Shahadah is the declaration of faith." },
+  { q:"Obligatory charity as a pillar is called…", choices:["Sadaqah","Zakat","Hajj","Tawaf"], correct:1, explain:"Zakat is obligatory charity (pillar)." },
+
+  { q:"Finish: 'Bismillah ir-Rahman ir-____'", choices:["Rahim","Aziz","Kabir","Malik"], correct:0, explain:"The phrase is 'Ar-Rahman Ar-Rahim'." },
+  { q:"Which surah begins with 'Qul huwa Allahu ahad'?", choices:["Al-Falaq","An-Nas","Al-Ikhlas","Al-Kafirun"], correct:2, explain:"That opening is from Surah Al-Ikhlas." },
+  { q:"Finish: 'Alhamdu lillahi Rabbil-____'", choices:["alamin","qadr","nas","falaq"], correct:0, explain:"From Al-Fatihah: 'Rabbil-'alamin'." },
+  { q:"What is ablution before prayer called?", choices:["Wudu","Ghusl","Ihram","Adhan"], correct:0, explain:"Wudu is the washing before prayer." },
+  { q:"What do Muslims say as a greeting?", choices:["Hello","As-salamu alaykum","Good day","Ciao"], correct:1, explain:"As-salamu alaykum means peace be upon you." },
+
+  { q:"Which is the last surah in the Qur’an?", choices:["Al-Fatihah","An-Nas","Al-Falaq","Al-Asr"], correct:1, explain:"An-Nas is the final surah." },
+  { q:"Which surah comes right before An-Nas?", choices:["Al-Falaq","Al-Ikhlas","Al-Kawthar","Al-Qadr"], correct:0, explain:"Al-Falaq is immediately before An-Nas." },
+  { q:"How many rak‘ah are in Maghrib (fard)?", choices:["2","3","4","5"], correct:1, explain:"Maghrib has 3 fard rak‘ah." },
+  { q:"How many rak‘ah are in Fajr (fard)?", choices:["2","3","4","5"], correct:0, explain:"Fajr has 2 fard rak‘ah." },
+  { q:"The call to prayer is called…", choices:["Adhan","Khutbah","Dua","Taraweeh"], correct:0, explain:"Adhan is the call to prayer." },
+
+  { q:"Finish: 'Allahu Akbar' means…", choices:["Allah is Great","Allah is One","Allah is Peace","Allah is Light"], correct:0, explain:"Allahu Akbar means Allah is the Greatest." },
+  { q:"Finish: 'SubhanAllah' means…", choices:["Glory be to Allah","Thanks to Allah","Allah is Great","Peace"], correct:0, explain:"SubhanAllah means Glory be to Allah." },
+  { q:"Finish: 'Alhamdulillah' means…", choices:["Thanks/Praise to Allah","Glory be to Allah","Allah is Great","Allah is One"], correct:0, explain:"Alhamdulillah means Praise be to Allah." },
+  { q:"Which city contains Masjid an-Nabawi?", choices:["Makkah","Madinah","Ta’if","Jerusalem"], correct:1, explain:"Masjid an-Nabawi is in Madinah." },
+  { q:"The pilgrimage Muslims travel for is called…", choices:["Sawm","Hajj","Zakat","Salah"], correct:1, explain:"Hajj is the pilgrimage to Makkah (if able)." },
+
+  { q:"Finish: 'Wa alaykum ____' (reply to greeting)", choices:["as-salam","salam","barakah","nur"], correct:0, explain:"Reply: 'Wa alaykum as-salam'." },
+  { q:"Which angel brought revelation to the Prophet ﷺ?", choices:["Jibril","Mikail","Israfil","Malik"], correct:0, explain:"Angel Jibril (Gabriel) delivered revelation." },
+  { q:"How many pillars of Islam are there?", choices:["3","4","5","6"], correct:2, explain:"There are five pillars." },
+  { q:"Friday congregational prayer is called…", choices:["Eid","Jumu‘ah","Ashura","Qiyam"], correct:1, explain:"Jumu‘ah is the Friday congregational prayer." },
+  { q:"Which of these is NOT a prayer time?", choices:["Fajr","Dhuhr","Isha","Zamzam"], correct:3, explain:"Zamzam is a well, not a prayer time." },
+
+  { q:"Finish: 'Iyyaka na'budu wa iyyaka ____' (one word)", choices:["nasta'in","nasjud","nadhkur","nuhsin"], correct:0, explain:"From Al-Fatihah: '…wa iyyaka nasta'in'." },
+  { q:"Finish: 'Ihdina s-siratal ____' (one word)", choices:["mustaqim","rahim","kabir","azim"], correct:0, explain:"From Al-Fatihah: 'siratal mustaqim'." },
+  { q:"Which surah is 'The Opening'?", choices:["Al-Fatihah","Al-Baqarah","Al-Ikhlas","An-Nas"], correct:0, explain:"Al-Fatihah means The Opening." },
+  { q:"Which is the sacred house Muslims face?", choices:["Ka‘bah","Minbar","Mihrab","Maqam"], correct:0, explain:"Muslims face the Ka‘bah in Salah." }
+];
+
+const Q_MED = [
+  { q:"Which surah is the longest in the Qur’an?", choices:["Al-Baqarah","Yasin","Al-Mulk","Al-Kahf"], correct:0, explain:"Al-Baqarah is the longest surah." },
+  { q:"How many rak‘ah are in Dhuhr (fard)?", choices:["2","3","4","5"], correct:2, explain:"Dhuhr has 4 fard rak‘ah." },
+  { q:"How many rak‘ah are in Asr (fard)?", choices:["2","3","4","5"], correct:2, explain:"Asr has 4 fard rak‘ah." },
+  { q:"How many rak‘ah are in Isha (fard)?", choices:["2","3","4","5"], correct:2, explain:"Isha has 4 fard rak‘ah." },
+  { q:"Which surah is called 'The Sincerity'?", choices:["Al-Ikhlas","Al-Falaq","An-Nas","Al-Masad"], correct:0, explain:"Al-Ikhlas emphasizes pure monotheism." },
+
+  { q:"Which is the sermon on Friday called?", choices:["Adhan","Iqamah","Khutbah","Taraweeh"], correct:2, explain:"Khutbah is the Friday sermon." },
+  { q:"What is the call right before prayer begins (inside masjid) called?", choices:["Khutbah","Iqamah","Dua","Tawaf"], correct:1, explain:"Iqamah signals the prayer is starting." },
+  { q:"Charity given at end of Ramadan is called…", choices:["Zakat al-Fitr","Zakat al-Mal","Waqf","Fidyah"], correct:0, explain:"Zakat al-Fitr is given before Eid prayer." },
+  { q:"Which surah is commonly recited on Friday (common practice)?", choices:["Al-Kahf","Al-Masad","Al-Fil","Al-Kawthar"], correct:0, explain:"Many recite Surah Al-Kahf on Fridays." },
+  { q:"Which surah includes the People of the Cave story?", choices:["Al-Kahf","Al-Mulk","Al-Qadr","Yasin"], correct:0, explain:"Al-Kahf means The Cave." },
+
+  { q:"Finish: 'Qul a'udhu bi Rabbil-____' (Daybreak)", choices:["falaq","nas","mulk","qadr"], correct:0, explain:"Surah Al-Falaq begins with that phrase." },
+  { q:"Finish: 'Qul a'udhu bi Rabbin-____' (Mankind)", choices:["nas","falaq","asr","qadr"], correct:0, explain:"Surah An-Nas begins with that phrase." },
+  { q:"Which surah is number 112?", choices:["Al-Ikhlas","Al-Falaq","An-Nas","Al-Asr"], correct:0, explain:"Al-Ikhlas is 112." },
+  { q:"Which surah is number 113?", choices:["Al-Falaq","An-Nas","Al-Ikhlas","Al-Qadr"], correct:0, explain:"Al-Falaq is 113." },
+  { q:"Which surah is number 114?", choices:["An-Nas","Al-Falaq","Al-Ikhlas","Al-Kawthar"], correct:0, explain:"An-Nas is 114." },
+
+  { q:"Dry ablution (when needed) is called…", choices:["Tayammum","Ghusl","Wudu","Ihram"], correct:0, explain:"Tayammum is performed with clean earth when needed." },
+  { q:"Full ritual bath (when required) is called…", choices:["Wudu","Ghusl","Siwak","Ihram"], correct:1, explain:"Ghusl is the full-body ritual bath." },
+  { q:"Which is NOT one of the Five Pillars?", choices:["Salah","Zakat","Tafsir","Sawm"], correct:2, explain:"Tafsir is Qur’anic interpretation, not a pillar." },
+  { q:"What is the event called: Night Journey and Ascension?", choices:["Hijrah","Isra’ and Mi‘raj","Badr","Uhud"], correct:1, explain:"The event is Isra’ and Mi‘raj." },
+  { q:"Which is the month after Ramadan?", choices:["Shawwal","Safar","Rajab","Dhul Qa‘dah"], correct:0, explain:"Shawwal comes after Ramadan." },
+
+  { q:"Which surah begins with 'Tabarakalladhi…'?", choices:["Al-Mulk","Al-Fatihah","Al-Ikhlas","Al-Asr"], correct:0, explain:"Surah Al-Mulk begins with 'Tabarakalladhi…'." },
+  { q:"Finish: 'Maliki ____ id-din' (one word)", choices:["yawm","nur","deen","haqq"], correct:0, explain:"From Al-Fatihah: 'Maliki yawmid-din'." },
+  { q:"Which prayer is right after sunset?", choices:["Maghrib","Isha","Asr","Dhuhr"], correct:0, explain:"Maghrib begins after sunset." },
+  { q:"Which prayer is performed at midday?", choices:["Dhuhr","Fajr","Maghrib","Isha"], correct:0, explain:"Dhuhr is midday prayer." },
+  { q:"Which night is described as better than a thousand months (surah theme)?", choices:["Laylat al-Qadr","Ashura","Day of Arafah","Eid Night"], correct:0, explain:"Laylat al-Qadr is described as better than a thousand months." },
+
+  { q:"Finish: 'Lam yalid wa lam ____' (one word)", choices:["yulad","yabqa","yarham","yuhsin"], correct:0, explain:"From Al-Ikhlas: 'Lam yalid wa lam yulad'." },
+  { q:"Which surah is called 'The Elephant'?", choices:["Al-Fil","Quraysh","Al-Ma‘un","Al-Humazah"], correct:0, explain:"Al-Fil means The Elephant." },
+  { q:"Which surah is called 'The Abundance'?", choices:["Al-Kawthar","Al-Asr","Al-Masad","Al-Qari‘ah"], correct:0, explain:"Al-Kawthar means The Abundance." },
+  { q:"Which surah is about time and loss?", choices:["Al-Asr","Al-Fil","Al-Qadr","Quraysh"], correct:0, explain:"Surah Al-Asr mentions time and human loss." },
+  { q:"What is the special prayer in Ramadan nights commonly called?", choices:["Taraweeh","Witr","Duha","Janazah"], correct:0, explain:"Taraweeh is commonly prayed in Ramadan nights." },
+
+  { q:"Finish: 'Siraat alladhina an'amta ____' (one word)", choices:["alayhim","alaykum","alayna","alayka"], correct:0, explain:"From Al-Fatihah: 'an'amta alayhim'." },
+  { q:"Finish: 'Ghayril maghdubi ____' (one word)", choices:["alayhim","alaykum","alayna","alayka"], correct:0, explain:"From Al-Fatihah: '…maghdubi alayhim'." },
+  { q:"Which battle is known as the first major battle in Islam?", choices:["Uhud","Badr","Khandaq","Hunayn"], correct:1, explain:"Badr is the first major battle." },
+  { q:"Which city did the Prophet ﷺ migrate to (Hijrah destination)?", choices:["Makkah","Ta’if","Madinah","Jerusalem"], correct:2, explain:"Hijrah was from Makkah to Madinah." }
+];
+
+const Q_HARD = [
+  { q:"Which caliph is known as 'As-Siddiq'?", choices:["Umar","Abu Bakr","Uthman","Ali"], correct:1, explain:"Abu Bakr (رضي الله عنه) is titled As-Siddiq." },
+  { q:"Which caliph is known as 'Al-Faruq'?", choices:["Umar","Abu Bakr","Uthman","Ali"], correct:0, explain:"Umar (رضي الله عنه) is titled Al-Faruq." },
+  { q:"Which caliph is known as 'Dhun-Nurayn'?", choices:["Umar","Abu Bakr","Uthman","Ali"], correct:2, explain:"Uthman (رضي الله عنه) is titled Dhun-Nurayn." },
+  { q:"Which angel is associated with the trumpet (traditionally)?", choices:["Jibril","Mikail","Israfil","Malik"], correct:2, explain:"Israfil is traditionally associated with the trumpet." },
+  { q:"Which prayer time is at night after twilight ends?", choices:["Isha","Maghrib","Asr","Dhuhr"], correct:0, explain:"Isha is the night prayer." },
+
+  { q:"Finish (short): 'Qul ____ Allahu ahad' (one word)", choices:["huwa","inna","anta","hiya"], correct:0, explain:"Surah Al-Ikhlas begins: 'Qul huwa Allahu ahad'." },
+  { q:"Finish (short): 'Wa lam yakun lahu ____ ahad' (one word)", choices:["kufuwan","rahman","salam","nuran"], correct:0, explain:"From Al-Ikhlas: '…lahu kufuwan ahad'." },
+  { q:"Which surah is called 'The Daybreak' (protection)?", choices:["Al-Falaq","An-Nas","Al-Masad","Al-Qari‘ah"], correct:0, explain:"Al-Falaq is commonly recited for protection." },
+  { q:"Which surah is commonly paired with Al-Falaq for protection?", choices:["An-Nas","Al-Ikhlas","Al-Asr","Al-Qadr"], correct:0, explain:"Al-Falaq and An-Nas are commonly recited together." },
+  { q:"Which surah is about a great night (theme: decree/power)?", choices:["Al-Qadr","Al-Mulk","Al-Kahf","Al-Fil"], correct:0, explain:"Surah Al-Qadr is about Laylat al-Qadr." },
+
+  { q:"Which surah warns against slander/backbiting (name meaning)?", choices:["Al-Humazah","Al-Kawthar","Al-Fil","Al-Asr"], correct:0, explain:"Al-Humazah addresses mockery and slander." },
+  { q:"Which surah includes a warning about Abu Lahab (by name/title)?", choices:["Al-Masad","Al-Asr","Al-Qadr","Quraysh"], correct:0, explain:"Surah Al-Masad addresses Abu Lahab." },
+  { q:"Which surah begins with 'Wal-'asr'?", choices:["Al-Asr","Al-Ikhlas","Al-Fil","Al-Ma‘un"], correct:0, explain:"Surah Al-Asr begins with 'Wal-'asr'." },
+  { q:"Which surah begins with 'Inna a'taynaka…'?", choices:["Al-Kawthar","Al-Asr","Al-Fil","Al-Masad"], correct:0, explain:"Surah Al-Kawthar begins with that phrase." },
+  { q:"Which is a Sunnah tool for cleaning teeth (commonly mentioned)?", choices:["Siwak","Tayammum","Ihram","Tawaf"], correct:0, explain:"Siwak is a recommended sunnah practice." },
+
+  { q:"Which is the correct order of the last 3 surahs?", choices:[
+      "An-Nas, Al-Falaq, Al-Ikhlas",
+      "Al-Ikhlas, Al-Falaq, An-Nas",
+      "Al-Falaq, An-Nas, Al-Ikhlas",
+      "Al-Ikhlas, An-Nas, Al-Falaq"
+    ], correct:1, explain:"Correct order: Al-Ikhlas (112), Al-Falaq (113), An-Nas (114)." },
+  { q:"Which is the Islamic pilgrimage performed in Dhul Hijjah?", choices:["Hajj","Umrah","Zakat","Sawm"], correct:0, explain:"Hajj occurs in Dhul Hijjah." },
+  { q:"Which is the correct meaning of 'Sawm'?", choices:["Prayer","Charity","Fasting","Pilgrimage"], correct:2, explain:"Sawm means fasting." },
+  { q:"Which is the correct meaning of 'Zakat'?", choices:["Obligatory charity","Prayer","Fasting","Pilgrimage"], correct:0, explain:"Zakat is obligatory charity." },
+  { q:"Which prayer is before sunrise?", choices:["Fajr","Dhuhr","Asr","Isha"], correct:0, explain:"Fajr is the dawn prayer before sunrise." },
+
+  { q:"Finish (short): 'Ar-Rahman ir-____' (one word)", choices:["Rahim","Aziz","Alim","Kabir"], correct:0, explain:"From Al-Fatihah: 'Ar-Rahman ir-Rahim'." },
+  { q:"Finish (short): 'Rabbil-____' (one word)", choices:["alamin","mulk","qadr","nas"], correct:0, explain:"From Al-Fatihah: 'Rabbil-'alamin'." },
+  { q:"Finish (short): '…wa la ddallin' is at the end of…", choices:["Al-Fatihah","Al-Ikhlas","Al-Falaq","An-Nas"], correct:0, explain:"It is from the end of Surah Al-Fatihah." },
+  { q:"Which surah is often read at night for protection (common practice)?", choices:["Al-Mulk","Al-Fil","Al-Kawthar","Quraysh"], correct:0, explain:"Many Muslims recite Surah Al-Mulk at night." },
+  { q:"Which surah contains Ayat al-Kursi?", choices:["Al-Baqarah","Al-Imran","Yasin","Al-Mulk"], correct:0, explain:"Ayat al-Kursi is in Surah Al-Baqarah (2:255)." },
+
+  { q:"Which prayer is at midday (after sun passes peak)?", choices:["Dhuhr","Fajr","Maghrib","Isha"], correct:0, explain:"Dhuhr is the midday prayer." },
+  { q:"Which is NOT a pillar of Islam?", choices:["Salah","Zakat","Sawm","Tafsir"], correct:3, explain:"Tafsir is Qur’anic interpretation, not a pillar." },
+  { q:"Which purification is a full-body ritual bath?", choices:["Ghusl","Wudu","Tayammum","Siwak"], correct:0, explain:"Ghusl is the full-body ritual bath." },
+  { q:"Which surah is called 'The Calamity/Striking Event' (name meaning)?", choices:["Al-Qari‘ah","Al-Asr","Al-Fil","Quraysh"], correct:0, explain:"Al-Qari‘ah refers to a striking calamity." },
+  { q:"Finish (short): 'Maliki ____ id-din' (one word)", choices:["yawm","nur","deen","haqq"], correct:0, explain:"From Al-Fatihah: 'Maliki yawmid-din'." },
+
+  { q:"Finish (short): 'Ihdina s-siratal ____' (one word)", choices:["mustaqim","rahim","kabir","azim"], correct:0, explain:"From Al-Fatihah: 'siratal mustaqim'." },
+  { q:"Finish (short): 'Ghayril maghdubi ____' (one word)", choices:["alayhim","alaykum","alayna","alayka"], correct:0, explain:"From Al-Fatihah: '…maghdubi alayhim'." },
+  { q:"Which event is called Isra’ and Mi‘raj?", choices:["Migration","Night Journey & Ascension","Battle of Badr","Treaty"], correct:1, explain:"Isra’ and Mi‘raj is the Night Journey and Ascension." },
+  { q:"Which battle is the first major battle in Islam?", choices:["Uhud","Badr","Khandaq","Hunayn"], correct:1, explain:"Badr is the first major battle." },
+  { q:"Finish (short): 'Bismillah ir-Rahman ir-____' (one word)", choices:["Rahim","Aziz","Kabir","Malik"], correct:0, explain:"The phrase is 'Ar-Rahman Ar-Rahim'." }
+];
+
+/* ----------------------- Helpers ----------------------- */
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function computeAutoDifficulty(r){
+  if(r<=3) return "Easy";
+  if(r<=6) return "Medium";
+  return "Hard";
+}
+function pickQuestion(diff){
+  const bank = diff==="Easy" ? Q_EASY : diff==="Medium" ? Q_MED : Q_HARD;
+  const base = bank[Math.floor(Math.random()*bank.length)];
+  const labeled = base.choices.map((t,i)=>({t, ok:i===base.correct}));
+  shuffle(labeled);
+  return {
+    q: base.q,
+    choices: labeled.map(x=>x.t),
+    correct: labeled.findIndex(x=>x.ok),
+    diff,
+    explain: base.explain
+  };
+}
+function setTimeoutP(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ----------------------- Sound ----------------------- */
+let audioCtx=null;
+function beep(freq=440, ms=120){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.frequency.value=freq; o.type="sine";
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime+0.01);
+    o.start();
+    setTimeout(()=>{
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+0.02);
+      o.stop(audioCtx.currentTime+0.03);
+    }, ms);
+  }catch{}
+}
+const toneMap={1:392,2:494,3:659};
+
+/* ----------------------- UI refs ----------------------- */
+const pads = Array.from(document.querySelectorAll(".pad"));
+const startTurnBtn = document.getElementById("startTurnBtn");
+const resetBtn = document.getElementById("resetBtn");
+const switchTeamBtn = document.getElementById("switchTeamBtn");
+const damageInput = document.getElementById("damageInput");
+const difficultySelect = document.getElementById("difficultySelect");
+const timerInput = document.getElementById("timerInput");
+
+const statusEl = document.getElementById("status");
+const roundEl = document.getElementById("round");
+const autoDiffEl = document.getElementById("autoDiff");
+const streakEl = document.getElementById("streak");
+
+const teamABox = document.getElementById("teamABox");
+const teamBBox = document.getElementById("teamBBox");
+const lifeAEl = document.getElementById("lifeA");
+const lifeBEl = document.getElementById("lifeB");
+const barA = document.getElementById("barA");
+const barB = document.getElementById("barB");
+const buffA = document.getElementById("buffA");
+const buffB = document.getElementById("buffB");
+const metaA = document.getElementById("metaA");
+const metaB = document.getElementById("metaB");
+
+const pShield = document.getElementById("pShield");
+const pHeal = document.getElementById("pHeal");
+const pSkip = document.getElementById("pSkip");
+const pSabr = document.getElementById("pSabr");
+const pHint = document.getElementById("pHint");
+const pFreeze = document.getElementById("pFreeze");
+const pLight = document.getElementById("pLight");
+
+/* Jeopardy overlay refs */
+const jqScreen = document.getElementById("jeopardyScreen");
+const jqTitle = document.getElementById("jqTitle");
+const jqTimer = document.getElementById("jqTimer");
+const jqQ = document.getElementById("jqQ");
+const jqAns = document.getElementById("jqAns");
+const jqMsg = document.getElementById("jqMsg");
+const jqExplain = document.getElementById("jqExplain");
+
+/* ----------------------- Game State ----------------------- */
+let active="A";
+let life={A:100, B:100};
+let locked=true;
+let awaitingQuiz=false;
+let currentQ=null;
+
+let sequence=[];
+let inputIndex=0;
+
+let streak=0;
+
+/* ✅ Pattern difficulty grows every question: 2 → 3 → 4 … cap 10 */
+let patternLevel = 2;
+const MAX_PATTERN_LEVEL = 10;
+
+let buffs={
+  A:{shield:false, sabr:false, skip:false},
+  B:{shield:false, sabr:false, skip:false}
+};
+
+let powers={
+  A:{shield:1, heal:1, skip:1, sabr:1, hint:1, freeze:1, light:0},
+  B:{shield:1, heal:1, skip:1, sabr:1, hint:1, freeze:1, light:0}
+};
+
+let freezeNextTurn = {A:0, B:0};
+let reviveAvailable = {A:true, B:true};
+
+/* ✅ Question timer state */
+let timerId = null;
+let timeLeft = 0;
+
+function dmgScale(){
+  const v=Number(damageInput.value);
+  return Number.isFinite(v) ? v : 1;
+}
+function setStatus(html){ statusEl.innerHTML=html; }
+function setPadsEnabled(on){ pads.forEach(p=>p.disabled=!on); }
+function updateActiveGlow(){
+  teamABox.classList.toggle("activeGlow", active==="A");
+  teamBBox.classList.toggle("activeGlow", active==="B");
+}
+
+function updateBars(){
+  const a=clamp(life.A,0,100), b=clamp(life.B,0,100);
+  lifeAEl.textContent=a; lifeBEl.textContent=b;
+  barA.style.width=a+"%"; barB.style.width=b+"%";
+
+  barA.classList.toggle("warn", a<=50 && a>25);
+  barA.classList.toggle("danger", a<=25);
+  barB.classList.toggle("warn", b<=50 && b>25);
+  barB.classList.toggle("danger", b<=25);
+
+  const showBuffs = (t) => {
+    const list=[];
+    if(buffs[t].shield) list.push("Shield");
+    if(buffs[t].sabr) list.push("Sabr");
+    if(buffs[t].skip) list.push("SkipReady");
+    return list.length? list.join(", ") : "—";
+  };
+  buffA.textContent="Buffs: "+showBuffs("A");
+  buffB.textContent="Buffs: "+showBuffs("B");
+
+  metaA.textContent = `Freeze: ${freezeNextTurn.A>0 ? "❄️ next turn" : "—"} | Revive: ${reviveAvailable.A ? "✅" : "❌"}`;
+  metaB.textContent = `Freeze: ${freezeNextTurn.B>0 ? "❄️ next turn" : "—"} | Revive: ${reviveAvailable.B ? "✅" : "❌"}`;
+}
+
+function updatePowerButtons(){
+  const p=powers[active];
+  pShield.querySelector(".powerTag").textContent=`(${p.shield})`;
+  pHeal.querySelector(".powerTag").textContent=`(${p.heal})`;
+  pSkip.querySelector(".powerTag").textContent=`(${p.skip})`;
+  pSabr.querySelector(".powerTag").textContent=`(${p.sabr})`;
+  pHint.querySelector(".powerTag").textContent=`(${p.hint})`;
+  pFreeze.querySelector(".powerTag").textContent=`(${p.freeze})`;
+  pLight.querySelector(".powerTag").textContent=`(${p.light})`;
+
+  const disabled = locked || awaitingQuiz;
+  pShield.disabled = disabled || p.shield<=0;
+  pHeal.disabled   = disabled || p.heal<=0;
+  pSkip.disabled   = disabled || p.skip<=0;
+  pSabr.disabled   = disabled || p.sabr<=0;
+  pHint.disabled   = disabled || p.hint<=0;
+  pFreeze.disabled = disabled || p.freeze<=0;
+  pLight.disabled  = disabled || p.light<=0;
+}
+
+/* ----------------------- Pattern builder ----------------------- */
+function buildSequence(len){
+  const seq=[];
+  for(let i=0;i<len;i++) seq.push(1 + Math.floor(Math.random()*3));
+  return seq;
+}
+function setNewPatternForCurrentLevel(){
+  sequence = buildSequence(patternLevel);
+  roundEl.textContent = String(sequence.length);
+  autoDiffEl.textContent = computeAutoDifficulty(sequence.length);
+}
+
+/* ----------------------- Timer ----------------------- */
+function getTimerSeconds(){
+  const v = Number(timerInput.value);
+  if(!Number.isFinite(v)) return 15;
+  return clamp(Math.floor(v), 5, 60);
+}
+function stopQuestionTimer(){
+  if(timerId){ clearInterval(timerId); timerId = null; }
+  timeLeft = 0;
+  jqTimer.textContent = "—";
+  jqTimer.classList.remove("warn","danger");
+}
+function updateTimerUI(){
+  jqTimer.textContent = `${timeLeft}`;
+  jqTimer.classList.remove("warn","danger");
+  if(timeLeft <= 7 && timeLeft > 3) jqTimer.classList.add("warn");
+  if(timeLeft <= 3) jqTimer.classList.add("danger");
+}
+function startQuestionTimer(){
+  stopQuestionTimer();
+  timeLeft = getTimerSeconds();
+  updateTimerUI();
+
+  timerId = setInterval(async () => {
+    timeLeft -= 1;
+    updateTimerUI();
+    if(timeLeft <= 0){
+      stopQuestionTimer();
+      await handleTimeout();
+    }
+  }, 1000);
+}
+
+/* ----------------------- Quiz overlay show/hide ----------------------- */
+function hideQuiz(){
+  stopQuestionTimer();
+  jqScreen.classList.add("hidden");
+  jqScreen.setAttribute("aria-hidden","true");
+  jqAns.innerHTML="";
+  jqMsg.textContent="";
+  jqExplain.classList.add("hidden");
+  jqExplain.textContent="";
+  awaitingQuiz=false;
+  currentQ=null;
+}
+
+function showQuiz(q){
+  awaitingQuiz = true;
+  currentQ = q;
+
+  jqScreen.classList.remove("hidden");
+  jqScreen.setAttribute("aria-hidden","false");
+
+  jqTitle.textContent = `Team ${active} • ${q.diff} Question`;
+  jqQ.textContent = q.q;
+  jqMsg.textContent = "Choose an answer.";
+  jqExplain.classList.add("hidden");
+  jqExplain.textContent = "";
+
+  jqAns.innerHTML="";
+  q.choices.forEach((choice, idx)=>{
+    const b=document.createElement("button");
+    b.textContent = choice;
+    b.addEventListener("click", ()=>handleAnswer(idx));
+    jqAns.appendChild(b);
+  });
+
+  startQuestionTimer();
+}
+
+function setOverlayButtonsEnabled(on){
+  Array.from(jqAns.querySelectorAll("button")).forEach(b=>b.disabled=!on);
+}
+
+/* ----------------------- Damage / Heal + Revive ----------------------- */
+function applyHeal(team, amount){
+  life[team]=clamp(life[team]+amount, 0, 100);
+  updateBars();
+}
+function maybeRevive(team){
+  if(life[team] > 0) return false;
+  if(!reviveAvailable[team]) return false;
+  reviveAvailable[team]=false;
+  life[team]=30;
+  updateBars();
+  setStatus(`<span class="good">Revive!</span> Team ${team} returns to <b>30%</b> Iman (one-time).`);
+  return true;
+}
+function applyDamage(team, amount){
+  amount = Math.round(amount * dmgScale());
+  if(buffs[team].shield){
+    buffs[team].shield=false;
+    updateBars();
+    return 0;
+  }
+  if(buffs[team].sabr){
+    amount = Math.ceil(amount/2);
+  }
+  life[team]=clamp(life[team]-amount, 0, 100);
+  updateBars();
+  if(life[team] <= 0) maybeRevive(team);
+  return amount;
+}
+
+/* ----------------------- Turn / end game ----------------------- */
+function checkGameEnd(){
+  if(life.A<=0 || life.B<=0){
+    locked=true; setPadsEnabled(false); hideQuiz(); updatePowerButtons();
+    const winner = life.A>0 ? "Team A" : life.B>0 ? "Team B" : "No one";
+    setStatus(`<span class="good">${winner} wins!</span> One team reached <b>0%</b>. Press <b>Reset</b> to play again.`);
+    return true;
+  }
+  return false;
+}
+function switchTeam(){
+  active = active==="A" ? "B" : "A";
+  updateActiveGlow();
+  updateBars();
+  updatePowerButtons();
+}
+
+/* ✅ After every question: switch team + increase pattern length + auto-start next pattern */
+async function endTurnAndSwitch(messageHtml){
+  hideQuiz();
+  locked=true;
+  setPadsEnabled(false);
+  updatePowerButtons();
+
+  if(checkGameEnd()) return;
+
+  setStatus(messageHtml);
+  await setTimeoutP(650);
+
+  // increase pattern difficulty AFTER each question (correct/wrong/timeout)
+  patternLevel = Math.min(MAX_PATTERN_LEVEL, patternLevel + 1);
+
+  switchTeam();
+
+  // reset per-turn-only
+  buffs[active].sabr = false;
+  streak = 0;
+  streakEl.textContent = "0";
+
+  setNewPatternForCurrentLevel();
+  setStatus(`Next: <span class="good">Team ${active}</span> • Watch the pattern (length <b>${patternLevel}</b>)…`);
+  await setTimeoutP(450);
+  await playSequence();
+}
+
+/* ----------------------- Sequence play (Freeze affects speed) ----------------------- */
+async function flashPad(n, duration=240){
+  const pad=pads.find(p=>Number(p.dataset.n)===n);
+  if(!pad) return;
+  pad.classList.add("flash");
+  beep(toneMap[n]||440, Math.max(90, duration-80));
+  await new Promise(r=>setTimeout(r,duration));
+  pad.classList.remove("flash");
+  await new Promise(r=>setTimeout(r,90));
+}
+
+async function playSequence(){
+  locked=true;
+  setPadsEnabled(false);
+  hideQuiz();
+  updatePowerButtons();
+
+  const frozen = freezeNextTurn[active] > 0;
+  if(frozen) freezeNextTurn[active] = 0;
+
+  const speed = frozen ? 150 : 240;
+  setStatus(`Watch the sequence… <span class="good">Team ${active}</span>${frozen ? " <span class='bad'>(FROZEN)</span>" : ""}`);
+
+  for(const n of sequence) await flashPad(n, speed);
+
+  inputIndex=0;
+  locked=false;
+  setPadsEnabled(true);
+  updatePowerButtons();
+  setStatus(`Your turn: repeat with <b>1</b>, <b>2</b>, <b>3</b>.`);
+}
+
+/* ----------------------- Rewards for correct answers ----------------------- */
+function awardForCorrect(diff){
+  const heals = {Easy:5, Medium:10, Hard:15};
+  applyHeal(active, heals[diff]);
+
+  streak += 1;
+  streakEl.textContent = String(streak);
+
+  if(diff==="Easy"){
+    if(streak % 3 === 0) powers[active].hint += 1;
+  } else if(diff==="Medium"){
+    if(streak % 2 === 0) powers[active].shield += 1;
+    if(streak % 4 === 0) powers[active].skip += 1;
+  } else {
+    powers[active].heal += 1;
+    powers[active].sabr += 1;
+    if(streak % 3 === 0) powers[active].light += 1;
+  }
+  updatePowerButtons();
+}
+
+/* ----------------------- Pattern complete → question gate ----------------------- */
+function computeEffectiveDifficulty(){
+  const choice = difficultySelect.value;
+  if(choice !== "auto") return choice;
+  return computeAutoDifficulty(sequence.length);
+}
+
+async function onPatternComplete(){
+  locked=true;
+  setPadsEnabled(false);
+  updatePowerButtons();
+
+  const diff = computeEffectiveDifficulty();
+
+  // allow skip power
+  if(buffs[active].skip){
+    buffs[active].skip=false;
+    awardForCorrect(diff);
+    await endTurnAndSwitch(`<span class="good">Skip used!</span> +Iman +Streak. Turn switches.`);
+    return;
+  }
+
+  setStatus(`<span class="good">Pattern cleared!</span> Jeopardy question…`);
+  const q = pickQuestion(diff);
+  showQuiz(q);
+  updatePowerButtons();
+}
+
+/* ----------------------- Timeout + Answer handling ----------------------- */
+async function handleTimeout(){
+  if(!awaitingQuiz || !currentQ) return;
+  setOverlayButtonsEnabled(false);
+
+  const diff = currentQ.diff;
+  const wrongDamage = {Easy:10, Medium:15, Hard:25};
+  const dmg = wrongDamage[diff];
+
+  beep(180,180);
+  jqMsg.innerHTML = `<span class="bad">Time’s up.</span> Timeout counts as wrong.`;
+  jqExplain.classList.remove("hidden");
+  jqExplain.textContent = "Explanation: " + currentQ.explain;
+
+  applyDamage(active, dmg);
+
+  await setTimeoutP(900);
+  await endTurnAndSwitch(`<span class="bad">Timeout.</span> -${Math.round(dmg*dmgScale())}% Iman. Turn switches.`);
+}
+
+async function handleAnswer(idx){
+  if(!awaitingQuiz || !currentQ) return;
+
+  stopQuestionTimer();
+  setOverlayButtonsEnabled(false);
+
+  const diff=currentQ.diff;
+  const wrongDamage = {Easy:10, Medium:15, Hard:25};
+
+  if(idx === currentQ.correct){
+    beep(740,120);
+    jqMsg.innerHTML = `<span class="good">Correct!</span> +Iman +Streak.`;
+    jqExplain.classList.remove("hidden");
+    jqExplain.textContent = "Explanation: " + currentQ.explain;
+
+    awardForCorrect(diff);
+
+    await setTimeoutP(900);
+    await endTurnAndSwitch(`<span class="good">Correct answer!</span> Team ${active} gains Iman. Turn switches.`);
+  } else {
+    beep(180,180);
+    const dmg = wrongDamage[diff];
+
+    jqMsg.innerHTML = `<span class="bad">Wrong.</span> You take damage.`;
+    jqExplain.classList.remove("hidden");
+    jqExplain.textContent = "Explanation: " + currentQ.explain;
+
+    applyDamage(active, dmg);
+
+    await setTimeoutP(900);
+    await endTurnAndSwitch(`<span class="bad">Wrong answer.</span> -${Math.round(dmg*dmgScale())}% Iman. Turn switches.`);
+  }
+}
+
+/* ----------------------- Pattern mistakes ----------------------- */
+async function onMistake(expected, got){
+  beep(160,220);
+  const dmg = 10;
+  applyDamage(active, dmg);
+
+  locked=true;
+  setPadsEnabled(false);
+  hideQuiz();
+  updatePowerButtons();
+
+  await endTurnAndSwitch(
+    `<span class="bad">Pattern mistake!</span> Expected <b>${expected}</b> but pressed <b>${got}</b>. -${Math.round(dmg*dmgScale())}% Iman. Turn switches.`
+  );
+}
+
+/* ----------------------- Pad input ----------------------- */
+pads.forEach(p=>{
+  p.addEventListener("click", async ()=>{
+    if(locked || awaitingQuiz) return;
+
+    const n=Number(p.dataset.n);
+    await flashPad(n, 150);
+
+    const expected=sequence[inputIndex];
+    if(n !== expected){
+      await onMistake(expected, n);
+      return;
+    }
+
+    inputIndex++;
+    if(inputIndex >= sequence.length){
+      await onPatternComplete();
+    }
+  });
+});
+
+/* ----------------------- Power-ups ----------------------- */
+function consumePower(key){
+  if(powers[active][key] <= 0) return false;
+  powers[active][key] -= 1;
+  updatePowerButtons();
+  return true;
+}
+
+pShield.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("shield")) return;
+  buffs[active].shield = true;
+  setStatus(`<span class="good">Shield activated!</span> Blocks the next damage you would take.`);
+  updateBars();
+});
+
+pHeal.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("heal")) return;
+  applyHeal(active, 20);
+  beep(640,120);
+  setStatus(`<span class="good">Heal used!</span> +20% Iman (max 100).`);
+});
+
+pSkip.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("skip")) return;
+  buffs[active].skip = true;
+  setStatus(`<span class="good">Skip ready!</span> Next question gate will be skipped.`);
+  updateBars();
+});
+
+pSabr.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("sabr")) return;
+  buffs[active].sabr = true;
+  setStatus(`<span class="good">Sabr Mode!</span> Damage is halved for this turn.`);
+  updateBars();
+});
+
+pHint.addEventListener("click", async ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("hint")) return;
+
+  applyDamage(active, 5);
+  setStatus(`<span class="good">Hint!</span> Replaying the sequence once (cost -5% Iman).`);
+  await setTimeoutP(250);
+
+  locked=true; setPadsEnabled(false); updatePowerButtons();
+  for(const n of sequence) await flashPad(n, 220);
+  locked=false; setPadsEnabled(true); updatePowerButtons();
+  setStatus(`Your turn continues: repeat the sequence from where you left off.`);
+});
+
+pFreeze.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("freeze")) return;
+  const opp = active==="A" ? "B" : "A";
+  freezeNextTurn[opp] = 1;
+  beep(520,120);
+  setStatus(`<span class="good">Freeze used!</span> Team ${opp} will have faster sequence playback next turn.`);
+  updateBars();
+});
+
+pLight.addEventListener("click", ()=>{
+  if(locked || awaitingQuiz) return;
+  if(!consumePower("light")) return;
+  life[active]=100;
+  updateBars();
+  beep(820,140);
+  setStatus(`<span class="good">Light of Qur’an!</span> Team ${active} restored to <b>100%</b> Iman.`);
+});
+
+/* ----------------------- Match Controls ----------------------- */
+async function startMatch(){
+  if(checkGameEnd()) return;
+
+  // reset match essentials (but keep powers/life as-is? usually reset for match)
+  patternLevel = 2;
+  streak = 0;
+  streakEl.textContent = "0";
+
+  setNewPatternForCurrentLevel();
+
+  setStatus(`Match start! <span class="good">Team ${active}</span> begins. Watch the pattern (length <b>${patternLevel}</b>)…`);
+  await setTimeoutP(350);
+  await playSequence();
+}
+
+startTurnBtn.addEventListener("click", startMatch);
+
+resetBtn.addEventListener("click", ()=>{
+  stopQuestionTimer();
+  hideQuiz();
+
+  active="A";
+  life={A:100,B:100};
+  locked=true;
+  awaitingQuiz=false;
+  currentQ=null;
+
+  sequence=[]; inputIndex=0;
+  streak=0; streakEl.textContent="0";
+
+  patternLevel = 2;
+  roundEl.textContent="0";
+  autoDiffEl.textContent="—";
+
+  buffs={A:{shield:false,sabr:false,skip:false},B:{shield:false,sabr:false,skip:false}};
+  powers={A:{shield:1,heal:1,skip:1,sabr:1,hint:1,freeze:1,light:0},B:{shield:1,heal:1,skip:1,sabr:1,hint:1,freeze:1,light:0}};
+  freezeNextTurn={A:0,B:0};
+  reviveAvailable={A:true,B:true};
+
+  timerInput.value="15";
+  difficultySelect.value="auto";
+  damageInput.value="1";
+
+  setPadsEnabled(false);
+  updateActiveGlow();
+  updateBars();
+  updatePowerButtons();
+
+  setStatus(`Reset done. Press <b>Start Match</b>. Pattern starts at length <b>2</b>.`);
+});
+
+switchTeamBtn.addEventListener("click", ()=>{
+  stopQuestionTimer();
+  hideQuiz();
+  locked=true; setPadsEnabled(false);
+  switchTeam();
+  setStatus(`Switched. Press <b>Start Match</b> (or continue after next question if match already running).`);
+});
+/*THIS VERISON GIVES MENU SURAH MENU START GAME AND PROGRESS
+/
+/* init */
+setPadsEnabled(false);
+updateActiveGlow();
+updateBars();
+updatePowerButtons();
+</script>
+<script>
+    // -------- Navigation --------
+    const screens = [
+  "menuScreen","nameScreen","realGameScreen",
+  "surahScreen","triviaScreen","lettersScreen",
+  "progressScreen","settingsScreen"
+];
+  
+function go(screenId){
+  screens.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return; // ✅ prevents errors
+    el.style.display = (id === screenId ? "block" : "none");
+  });
+}
+  
+    // -------- Start Game (name required) --------
+    function startGame(){
+  const name = document.getElementById("nameInput").value.trim();
+  if(!name){
+    alert("Please enter your name to start.");
+    return;
+  }
+
+  // (Optional) If you want to display player name somewhere later, we can add it.
+  go("realGameScreen");
+
+  // ✅ Auto start the match
+  if (typeof startMatch === "function") startMatch();
+}go("menuScreen");
+  
+    // -------- Trivia (questions-only) --------
+    const triviaQuestions = [
+      "How many ayat are in Surah Al-Fatiha?",
+      "What is the first Surah in the Qur'an?",
+      "Which direction do Muslims face during Salah?"
+    ];
+    let triviaIndex = 0;
+  
+    function nextTrivia(){
+      const q = triviaQuestions[triviaIndex % triviaQuestions.length];
+      document.getElementById("triviaQuestion").textContent = q;
+      triviaIndex++;
+    }
+  
+    // -------- Arabic Letters --------
+    const arabicLetters = ["ا","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","ه","و","ي"];
+  
+    function renderLetters(){
+      const grid = document.getElementById("lettersGrid");
+      grid.innerHTML = "";
+      arabicLetters.forEach(letter=>{
+        const btn = document.createElement("button");
+        btn.className = "letterBtn";
+        btn.textContent = letter;
+        btn.onclick = () => alert("Letter: " + letter);
+        grid.appendChild(btn);
+      });
+    }
+  
+    // Render letters once on load
+    renderLetters();
+  
+    // Start on menu
+    go("menuScreen");
+  </script>
+</body>
+</html> 
+
