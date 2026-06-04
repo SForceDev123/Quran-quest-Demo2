@@ -840,15 +840,6 @@
   <div class="game-controls">
     <button id="startBtn" class="ctrl-btn" onclick="startMatch()">▶ Start</button>
     <button id="resetBtn" class="ctrl-btn" onclick="resetMatch()">↺ Reset</button>
-    <span class="pill-select">
-      Difficulty
-      <select id="diffSelect">
-        <option value="auto">Auto</option>
-        <option value="Easy">Easy</option>
-        <option value="Medium">Medium</option>
-        <option value="Hard">Hard</option>
-      </select>
-    </span>
   </div>
 
   <!-- Status -->
@@ -1054,7 +1045,6 @@
     <div class="jqTop">
       <div class="jqMeta">
         <div class="jqTitle" id="jqTitle">Team A • Question</div>
-        <div class="jqDiff" id="jqDiff">Easy</div>
       </div>
       <div class="jqTimer" id="jqTimer">15</div>
     </div>
@@ -1070,7 +1060,7 @@
 ══════════════════════════════════════════════════ -->
 <script>
 /* ── QUESTION BANKS ──────────────────────────────── */
-const Q_EASY=[
+const QUESTIONS=[
   {q:"Who was the first person to call the Adhan?",choices:["Abu Bakr","Umar","Bilal ibn Rabah","Uthman"],correct:2,explain:"Bilal ibn Rabah (رضي الله عنه) is the first mu'adhin."},
   {q:"How many daily obligatory prayers are there?",choices:["3","5","6","7"],correct:1,explain:"The five prayers: Fajr, Dhuhr, Asr, Maghrib, Isha."},
   {q:"Muslims fast in which month?",choices:["Rajab","Ramadan","Shawwal","Safar"],correct:1,explain:"Fasting in Ramadan is obligatory."},
@@ -1100,9 +1090,7 @@ const Q_EASY=[
   {q:"Reply to 'As-salamu alaykum' is…",choices:["Wa alaykum as-salam","Salam","Barakah","Nur"],correct:0,explain:"Reply: 'Wa alaykum as-salam'."},
   {q:"Which surah is 'The Opening'?",choices:["Al-Fatihah","Al-Baqarah","Al-Ikhlas","An-Nas"],correct:0,explain:"Al-Fatihah means The Opening."},
   {q:"Which is NOT a prayer time?",choices:["Fajr","Dhuhr","Isha","Zamzam"],correct:3,explain:"Zamzam is a well, not a prayer time."},
-  {q:"What is the direction Muslims face in Salah?",choices:["Qiblah","Minbar","Mihrab","Iqamah"],correct:0,explain:"Qiblah is the direction toward the Ka'bah."}
-];
-const Q_MED=[
+  {q:"What is the direction Muslims face in Salah?",choices:["Qiblah","Minbar","Mihrab","Iqamah"],correct:0,explain:"Qiblah is the direction toward the Ka'bah."},
   {q:"Which surah is the longest in the Qur'an?",choices:["Al-Baqarah","Yasin","Al-Mulk","Al-Kahf"],correct:0,explain:"Al-Baqarah is the longest surah."},
   {q:"How many rak'ah are in Dhuhr (fard)?",choices:["2","3","4","5"],correct:2,explain:"Dhuhr has 4 fard rak'ah."},
   {q:"How many rak'ah are in Asr (fard)?",choices:["2","3","4","5"],correct:2,explain:"Asr has 4 fard rak'ah."},
@@ -1132,9 +1120,7 @@ const Q_MED=[
   {q:"Which surah begins 'Tabarakalladhi…'?",choices:["Al-Mulk","Al-Fatihah","Al-Ikhlas","Al-Asr"],correct:0,explain:"Surah Al-Mulk begins with 'Tabarakalladhi…'."},
   {q:"Which prayer is at midday?",choices:["Dhuhr","Fajr","Maghrib","Isha"],correct:0,explain:"Dhuhr is midday prayer."},
   {q:"Finish: 'Qul a'udhu bi Rabbil-____' (Daybreak)",choices:["falaq","nas","mulk","qadr"],correct:0,explain:"Surah Al-Falaq begins with that phrase."},
-  {q:"Finish: 'Siraat alladhina an'amta ____'",choices:["alayhim","alaykum","alayna","alayka"],correct:0,explain:"From Al-Fatihah: 'an'amta alayhim'."}
-];
-const Q_HARD=[
+  {q:"Finish: 'Siraat alladhina an'amta ____'",choices:["alayhim","alaykum","alayna","alayka"],correct:0,explain:"From Al-Fatihah: 'an'amta alayhim'."},
   {q:"Which caliph is known as 'As-Siddiq'?",choices:["Umar","Abu Bakr","Uthman","Ali"],correct:1,explain:"Abu Bakr (رضي الله عنه) is titled As-Siddiq."},
   {q:"Which caliph is known as 'Al-Faruq'?",choices:["Umar","Abu Bakr","Uthman","Ali"],correct:0,explain:"Umar (رضي الله عنه) is titled Al-Faruq."},
   {q:"Which caliph is known as 'Dhun-Nurayn'?",choices:["Umar","Abu Bakr","Uthman","Ali"],correct:2,explain:"Uthman (رضي الله عنه) is titled Dhun-Nurayn."},
@@ -1159,7 +1145,106 @@ const Q_HARD=[
   {q:"Finish: 'Ghayril maghdubi ____'",choices:["alayhim","alaykum","alayna","alayka"],correct:0,explain:"From Al-Fatihah: '…maghdubi alayhim'."},
   {q:"Which is NOT a pillar of Islam?",choices:["Salah","Zakat","Sawm","Tafsir"],correct:3,explain:"Tafsir is Qur'anic interpretation, not a pillar."},
   {q:"Finish: 'Bismillah ir-Rahman ir-____'",choices:["Rahim","Aziz","Kabir","Malik"],correct:0,explain:"The phrase is 'Ar-Rahman Ar-Rahim'."},
-  {q:"What does 'Zakat' mean?",choices:["Obligatory charity","Prayer","Fasting","Pilgrimage"],correct:0,explain:"Zakat is obligatory charity."}
+  {q:"What does 'Zakat' mean?",choices:["Obligatory charity","Prayer","Fasting","Pilgrimage"],correct:0,explain:"Zakat is obligatory charity."},
+  // ── PROPHETS ──
+  {q:"Which prophet was swallowed by a whale?",choices:["Musa","Yunus","Ibrahim","Isa"],correct:1,explain:"Prophet Yunus (عليه السلام) was swallowed by a whale."},
+  {q:"Which prophet built the ark?",choices:["Ibrahim","Nuh","Musa","Dawud"],correct:1,explain:"Prophet Nuh (عليه السلام) built the ark."},
+  {q:"Which prophet was thrown into fire but not harmed?",choices:["Musa","Isa","Ibrahim","Yusuf"],correct:2,explain:"Prophet Ibrahim (عليه السلام) was thrown into fire by Nimrod."},
+  {q:"Which prophet could speak to birds and animals?",choices:["Dawud","Sulayman","Idris","Ilyas"],correct:1,explain:"Prophet Sulayman (عليه السلام) was given this miracle."},
+  {q:"Which prophet was given the Zabur (Psalms)?",choices:["Musa","Isa","Dawud","Ibrahim"],correct:2,explain:"Prophet Dawud (عليه السلام) received the Zabur."},
+  {q:"Which prophet was given the Injeel (Gospel)?",choices:["Musa","Isa","Dawud","Muhammad ﷺ"],correct:1,explain:"Prophet Isa (عليه السلام) received the Injeel."},
+  {q:"Which prophet was given the Tawrah (Torah)?",choices:["Musa","Isa","Dawud","Ibrahim"],correct:0,explain:"Prophet Musa (عليه السلام) received the Tawrah."},
+  {q:"Which prophet is mentioned most in the Qur'an?",choices:["Muhammad ﷺ","Ibrahim","Musa","Isa"],correct:2,explain:"Prophet Musa (عليه السلام) is mentioned the most."},
+  {q:"Which prophet was known for his extraordinary patience?",choices:["Ayyub","Yusuf","Nuh","Yunus"],correct:0,explain:"Prophet Ayyub (عليه السلام) is the example of patience."},
+  {q:"How many total prophets does Islam mention?",choices:["25","124,000","25 named","All of the above"],correct:2,explain:"25 prophets are mentioned by name in the Qur'an."},
+  {q:"Which prophet was sold into slavery by his brothers?",choices:["Yusuf","Yahya","Zakariyya","Idris"],correct:0,explain:"Prophet Yusuf (عليه السلام) was sold by his brothers."},
+  {q:"Prophet Isa (عليه السلام) was born to which mother?",choices:["Asiyah","Maryam","Khadijah","Fatimah"],correct:1,explain:"Maryam (رضي الله عنها) is the mother of Prophet Isa."},
+  {q:"Which is the seal of all prophets?",choices:["Ibrahim","Isa","Muhammad ﷺ","Musa"],correct:2,explain:"Prophet Muhammad ﷺ is Khatam an-Nabiyyin, the seal."},
+  {q:"Which prophet was an expert in dream interpretation?",choices:["Dawud","Yusuf","Sulayman","Ibrahim"],correct:1,explain:"Prophet Yusuf (عليه السلام) was gifted in interpreting dreams."},
+  // ── COMPANIONS ──
+  {q:"Who was the first man to accept Islam?",choices:["Umar","Abu Bakr","Ali","Uthman"],correct:1,explain:"Abu Bakr (رضي الله عنه) was the first adult man to accept Islam."},
+  {q:"Who was the first woman to accept Islam?",choices:["Fatimah","Aisha","Khadijah","Maryam"],correct:2,explain:"Khadijah (رضي الله عنها) was the first to accept Islam."},
+  {q:"Who is known as the 'Father of the Poor'?",choices:["Umar","Abu Dharr","Abu Bakr","Ali"],correct:1,explain:"Abu Dharr al-Ghifari (رضي الله عنه) was known for this."},
+  {q:"Which companion memorised the entire Qur'an and was blind?",choices:["Ibn Mas'ud","Abdullah ibn Umm Maktum","Zayd ibn Thabit","Abu Hurairah"],correct:1,explain:"Abdullah ibn Umm Maktum (رضي الله عنه) memorised the Qur'an despite blindness."},
+  {q:"Who was the Prophet's ﷺ beloved wife known as 'Mother of the Believers'?",choices:["Khadijah","Aisha","Hafsah","Zaynab"],correct:1,explain:"Aisha (رضي الله عنها) is widely known by this title."},
+  {q:"Which companion is known for narrating the most hadith?",choices:["Umar","Abu Bakr","Abu Hurairah","Ali"],correct:2,explain:"Abu Hurairah (رضي الله عنه) narrated the most hadith."},
+  // ── QUR'AN FACTS ──
+  {q:"How many juz' (parts) does the Qur'an have?",choices:["20","30","40","114"],correct:1,explain:"The Qur'an is divided into 30 juz'."},
+  {q:"The longest verse in the Qur'an is in which surah?",choices:["Al-Baqarah","Al-Imran","An-Nisa","Al-Maidah"],correct:0,explain:"Ayat ad-Dayn (2:282) in Al-Baqarah is the longest verse."},
+  {q:"Which surah has no Bismillah at its start?",choices:["Al-Fatihah","At-Tawbah","Al-Ikhlas","Al-Mulk"],correct:1,explain:"Surah At-Tawbah (chapter 9) begins without Bismillah."},
+  {q:"Which surah contains Bismillah twice?",choices:["Al-Fatihah","An-Naml","Al-Baqarah","Al-Ikhlas"],correct:1,explain:"Surah An-Naml (27) has Bismillah in verse 30 as well."},
+  {q:"The word 'Qur'an' means…",choices:["The Book","The Recitation","The Message","The Light"],correct:1,explain:"Qur'an comes from the root 'Iqra' meaning to recite."},
+  {q:"How many verses are in Surah Al-Fatihah?",choices:["5","6","7","8"],correct:2,explain:"Al-Fatihah has 7 verses."},
+  {q:"In which surah is Ayat al-Kursi?",choices:["Al-Imran","Al-Baqarah","An-Nisa","Al-Maidah"],correct:1,explain:"Ayat al-Kursi is verse 255 of Surah Al-Baqarah."},
+  {q:"Which surah is called the 'Heart of the Qur'an'?",choices:["Al-Fatihah","Al-Kahf","Yasin","Al-Mulk"],correct:2,explain:"Surah Yasin is known as the heart of the Qur'an."},
+  {q:"Surah Al-Kahf is recommended to be read on which day?",choices:["Monday","Wednesday","Friday","Sunday"],correct:2,explain:"Reading Al-Kahf on Friday is a Sunnah."},
+  {q:"How many Makki surahs are in the Qur'an (approx)?",choices:["28","58","86","114"],correct:2,explain:"Approximately 86 surahs were revealed in Makkah."},
+  {q:"The Qur'an was revealed over how many years?",choices:["10","23","30","40"],correct:1,explain:"The Qur'an was revealed over 23 years."},
+  {q:"Which surah is called 'The Rising of the Dead'?",choices:["Al-Qiyamah","Al-Muzzammil","Al-Muddaththir","Al-Insan"],correct:0,explain:"Surah Al-Qiyamah refers to the Day of Resurrection."},
+  {q:"'Al-Fatihah' is also called…",choices:["Umm al-Kitab","Al-Ikhlas","Al-Hamd","Both A & C"],correct:3,explain:"Al-Fatihah is known as Umm al-Kitab (Mother of the Book) and Al-Hamd."},
+  {q:"Which surah mentions the story of Dhul-Qarnayn?",choices:["Al-Kahf","Al-Anbiya","Al-Mulk","Al-Isra"],correct:0,explain:"Dhul-Qarnayn's story is in Surah Al-Kahf."},
+  {q:"The first word revealed of the Qur'an was…",choices:["Bismillah","Alhamdulillah","Iqra","Qul"],correct:2,explain:"'Iqra' (Read!) was the first word revealed to the Prophet ﷺ."},
+  // ── ISLAMIC CALENDAR & MONTHS ──
+  {q:"How many months are in the Islamic calendar?",choices:["10","11","12","13"],correct:2,explain:"The Islamic (Hijri) calendar has 12 months."},
+  {q:"Which is the first month of the Islamic calendar?",choices:["Ramadan","Muharram","Safar","Dhul Hijjah"],correct:1,explain:"Muharram is the first month of the Hijri calendar."},
+  {q:"Which month is considered the 'Month of Allah'?",choices:["Ramadan","Rajab","Muharram","Dhul Hijjah"],correct:2,explain:"Muharram is called the Month of Allah."},
+  {q:"Hajj takes place in which month?",choices:["Ramadan","Muharram","Rajab","Dhul Hijjah"],correct:3,explain:"Hajj occurs in the month of Dhul Hijjah."},
+  {q:"The night of Laylat al-Qadr is in which month?",choices:["Muharram","Rajab","Sha'ban","Ramadan"],correct:3,explain:"Laylat al-Qadr is in the last 10 nights of Ramadan."},
+  {q:"The Prophet ﷺ was born in which month?",choices:["Muharram","Safar","Rabi al-Awwal","Rajab"],correct:2,explain:"The Prophet ﷺ was born in Rabi al-Awwal."},
+  {q:"Eid al-Adha is celebrated on which date?",choices:["1 Shawwal","10 Dhul Hijjah","27 Ramadan","15 Sha'ban"],correct:1,explain:"Eid al-Adha is on the 10th of Dhul Hijjah."},
+  {q:"Eid al-Fitr is celebrated on which date?",choices:["1 Shawwal","10 Dhul Hijjah","1 Muharram","15 Sha'ban"],correct:0,explain:"Eid al-Fitr is on the 1st of Shawwal."},
+  // ── ISLAMIC HISTORY ──
+  {q:"In which year did the Prophet ﷺ migrate to Madinah?",choices:["610 CE","622 CE","632 CE","570 CE"],correct:1,explain:"The Hijrah occurred in 622 CE, marking year 1 of the Islamic calendar."},
+  {q:"In which city was the Prophet ﷺ born?",choices:["Madinah","Ta'if","Jerusalem","Makkah"],correct:3,explain:"The Prophet ﷺ was born in Makkah."},
+  {q:"How old was the Prophet ﷺ when he received the first revelation?",choices:["30","40","35","45"],correct:1,explain:"The Prophet ﷺ was 40 years old when revelation began."},
+  {q:"The first mosque built in Islam was…",choices:["Masjid al-Haram","Masjid an-Nabawi","Masjid Quba","Al-Aqsa"],correct:2,explain:"Masjid Quba was the first mosque built in Islam."},
+  {q:"What was the name of the Prophet's ﷺ father?",choices:["Abu Talib","Abdullah","Abd al-Muttalib","Hamzah"],correct:1,explain:"The Prophet's ﷺ father was Abdullah."},
+  {q:"What was the name of the Prophet's ﷺ mother?",choices:["Khadijah","Fatimah","Aminah","Maryam"],correct:2,explain:"The Prophet's ﷺ mother was Aminah bint Wahb."},
+  {q:"Which battle was won by Muslims despite being outnumbered 3:1?",choices:["Uhud","Khandaq","Badr","Hunayn"],correct:2,explain:"The Battle of Badr was a miraculous victory for the Muslims."},
+  {q:"The Year of the Elephant refers to which event?",choices:["Hijrah","Birth of the Prophet ﷺ","Battle of Badr","Conquest of Makkah"],correct:1,explain:"The Year of the Elephant is the year of the Prophet's ﷺ birth."},
+  {q:"Which prophet is considered the father of the Prophets?",choices:["Nuh","Ibrahim","Adam","Musa"],correct:1,explain:"Ibrahim (عليه السلام) is known as the father of the prophets."},
+  {q:"Who was the first martyr in Islam?",choices:["Khadijah","Bilal","Sumayyah","Yasir"],correct:2,explain:"Sumayyah bint Khabbat (رضي الله عنها) was the first martyr."},
+  // ── DU'A & DHIKR ──
+  {q:"What do Muslims say when starting any action?",choices:["Alhamdulillah","Bismillah","Inshallah","Mashallah"],correct:1,explain:"'Bismillah' (In the name of Allah) is said before starting."},
+  {q:"What do Muslims say when someone sneezes?",choices:["Yarhamukallah","Alhamdulillah","Barakallah","Mashallah"],correct:1,explain:"The one who sneezes says 'Alhamdulillah', others reply 'Yarhamukallah'."},
+  {q:"'Inna lillahi wa inna ilayhi raji'un' is said when…",choices:["Happy news","Someone dies","Eating","Travelling"],correct:1,explain:"This phrase (from Al-Baqarah 2:156) is said upon receiving news of death."},
+  {q:"'SubhanAllah wa bihamdih' is a form of…",choices:["Du'a","Tasbeeh","Takbir","Tahmid"],correct:1,explain:"It is tasbeeh — glorification of Allah."},
+  {q:"What is said before eating?",choices:["Bismillah","Alhamdulillah","Allahu Akbar","Inshallah"],correct:0,explain:"'Bismillah' is said before eating."},
+  {q:"'La hawla wa la quwwata illa billah' means…",choices:["There is no power except with Allah","Praise be to Allah","Glory be to Allah","Allah is sufficient"],correct:0,explain:"This phrase (Hawqalah) acknowledges all power belongs to Allah."},
+  {q:"What is the phrase said when praising something?",choices:["Inshallah","Mashallah","Bismillah","Alhamdulillah"],correct:1,explain:"'Mashallah' expresses admiration and gratitude to Allah."},
+  {q:"'Inshallah' means…",choices:["Praise Allah","If Allah wills","Allah is great","By Allah"],correct:1,explain:"'Inshallah' means 'If Allah wills it'."},
+  // ── AQEEDAH & PILLARS ──
+  {q:"How many pillars of Iman (faith) are there?",choices:["5","6","7","3"],correct:1,explain:"There are 6 pillars of Iman."},
+  {q:"Belief in which of the following is NOT a pillar of Iman?",choices:["Angels","Prophets","Hajj","Divine Decree"],correct:2,explain:"Hajj is a pillar of Islam, not Iman. Iman includes: Allah, Angels, Books, Prophets, Last Day, Qadar."},
+  {q:"Which is the greatest sin in Islam?",choices:["Lying","Shirk","Backbiting","Stealing"],correct:1,explain:"Shirk (associating partners with Allah) is the greatest sin."},
+  {q:"'Tawhid' means…",choices:["Oneness of Allah","Prayer","Fasting","Pilgrimage"],correct:0,explain:"Tawhid is the belief in the absolute oneness of Allah."},
+  {q:"The unseen realm is called…",choices:["Dunya","Akhirah","Al-Ghayb","Barzakh"],correct:2,explain:"Al-Ghayb refers to the unseen — things only Allah knows."},
+  {q:"The intermediate period between death and resurrection is called…",choices:["Dunya","Akhirah","Barzakh","Sirat"],correct:2,explain:"Barzakh is the barrier/period between death and the Day of Judgment."},
+  {q:"The bridge over Hell on Judgment Day is called…",choices:["Barzakh","As-Sirat","Al-Mizan","Al-Hawd"],correct:1,explain:"As-Sirat is the bridge everyone must cross on the Day of Judgment."},
+  {q:"The scales of deeds on Judgment Day are called…",choices:["As-Sirat","Al-Hawd","Al-Mizan","Al-Jannah"],correct:2,explain:"Al-Mizan are the scales that weigh deeds on Judgment Day."},
+  // ── FIQH & WORSHIP ──
+  {q:"How many times a day should a Muslim pray?",choices:["3","5","7","10"],correct:1,explain:"Muslims pray 5 times daily."},
+  {q:"What breaks the fast (iftar) is recommended to start with?",choices:["Water only","Dates","Bread","Milk"],correct:1,explain:"It is Sunnah to break fast with dates, following the Prophet ﷺ."},
+  {q:"How many days does Hajj last?",choices:["3","5","7","10"],correct:1,explain:"Hajj spans approximately 5 days."},
+  {q:"The circumambulation of the Ka'bah is called…",choices:["Sa'i","Tawaf","Rami","Ihram"],correct:1,explain:"Tawaf is the act of circling the Ka'bah 7 times."},
+  {q:"Walking between Safa and Marwa is called…",choices:["Tawaf","Sa'i","Rami","Ihram"],correct:1,explain:"Sa'i commemorates Hajar's search for water."},
+  {q:"Stoning the pillars during Hajj is called…",choices:["Tawaf","Sa'i","Rami al-Jamarat","Ihram"],correct:2,explain:"Rami al-Jamarat is the stoning of the three pillars."},
+  {q:"The sacred state of pilgrimage is called…",choices:["Tawaf","Sa'i","Rami","Ihram"],correct:3,explain:"Ihram is the sacred state pilgrims enter before Hajj/Umrah."},
+  {q:"The well of Zamzam is located in…",choices:["Madinah","Jerusalem","Makkah","Ta'if"],correct:2,explain:"The Zamzam well is inside Masjid al-Haram in Makkah."},
+  {q:"Sunnah prayers performed before Fajr are called…",choices:["Witr","Tahajjud","Fajr sunnah","Duha"],correct:2,explain:"Two rak'ah sunnah before Fajr fard are highly recommended."},
+  {q:"The voluntary night prayer is called…",choices:["Duha","Witr","Tahajjud","Taraweeh"],correct:2,explain:"Tahajjud is the voluntary night prayer."},
+  {q:"The Duha prayer is performed…",choices:["Before Fajr","After sunrise","After Dhuhr","After Asr"],correct:1,explain:"Duha is prayed after sunrise until before midday."},
+  // ── SURAH CONTENT ──
+  {q:"Which surah tells the story of the People of the Trench?",choices:["Al-Buruj","Al-Inshiqaq","Al-Mutaffifin","Al-A'la"],correct:0,explain:"Surah Al-Buruj tells the story of Ashabul Ukhdud (People of the Trench)."},
+  {q:"Which surah begins 'Has there come upon man a period of time when he was nothing mentioned?'",choices:["Al-Insan","Al-Muzzammil","Al-Muddaththir","Al-Qiyamah"],correct:0,explain:"Surah Al-Insan (76) begins with this question."},
+  {q:"Which surah is about the blessing of Al-Kawthar?",choices:["Al-Asr","Al-Kawthar","Al-Fil","Quraysh"],correct:1,explain:"Surah Al-Kawthar (108) is about the river Al-Kawthar given to the Prophet ﷺ."},
+  {q:"Which surah ends with 'min al-jinnati wan-nas'?",choices:["Al-Falaq","An-Nas","Al-Ikhlas","Al-Masad"],correct:1,explain:"Surah An-Nas ends with 'minal jinnati wannas'."},
+  {q:"'Tabat yada Abi Lahab' is from which surah?",choices:["Al-Kawthar","Al-Asr","Al-Masad","Al-Fil"],correct:2,explain:"Surah Al-Masad (111) begins with 'Tabbat yada Abi Lahab'."},
+  {q:"Surah Al-Mulk has how many verses?",choices:["20","25","30","29"],correct:2,explain:"Surah Al-Mulk has 30 verses."},
+  {q:"Which surah is called 'The Beneficent'?",choices:["Al-Rahman","Al-Rahim","An-Nur","Al-Latif"],correct:0,explain:"Surah Ar-Rahman (55) means The Beneficent/Most Gracious."},
+  {q:"What is the repeated phrase in Surah Ar-Rahman?",choices:["Alhamdulillah","Allahu Akbar","Fabi ayyi ala'i Rabbikuma tukadhdhiban","SubhanAllah"],correct:2,explain:"'Which of the favours of your Lord will you deny?' repeats 31 times."},
+  {q:"Which surah was revealed to comfort the Prophet ﷺ when revelation paused?",choices:["Ad-Duha","Al-Inshirah","Al-Qadr","Al-Alaq"],correct:0,explain:"Surah Ad-Duha was revealed to comfort the Prophet ﷺ."},
+  {q:"Which surah says 'Fa inna ma'al usri yusra'?",choices:["Ad-Duha","Al-Inshirah","Al-Alaq","Al-Qadr"],correct:1,explain:"'Verily with hardship comes ease' is in Surah Al-Inshirah (94)."}
 ];
 
 /* ── HELPERS ─────────────────────────────────────── */
@@ -1168,13 +1253,13 @@ function shuffle(arr){
   for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
   return arr;
 }
-function autoDiff(len){return len<=3?"Easy":len<=6?"Medium":"Hard";}
-function pickQ(diff){
-  const bank=diff==="Easy"?Q_EASY:diff==="Medium"?Q_MED:Q_HARD;
-  const b=bank[Math.floor(Math.random()*bank.length)];
+const _shuffledQ=shuffle([...QUESTIONS]);let _qIdx=0;
+function pickQ(){
+  if(_qIdx>=_shuffledQ.length){shuffle(_shuffledQ);_qIdx=0;}
+  const b=_shuffledQ[_qIdx++];
   const labeled=b.choices.map((t,i)=>({t,ok:i===b.correct}));
   shuffle(labeled);
-  return{q:b.q,choices:labeled.map(x=>x.t),correct:labeled.findIndex(x=>x.ok),diff,explain:b.explain};
+  return{q:b.q,choices:labeled.map(x=>x.t),correct:labeled.findIndex(x=>x.ok),explain:b.explain};
 }
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
@@ -1393,7 +1478,6 @@ function showQuiz(q){
   const jq=document.getElementById("jeopardyScreen");
   jq.classList.remove("hidden");jq.setAttribute("aria-hidden","false");
   document.getElementById("jqTitle").textContent=getTeamName(active)+" • Question";
-  document.getElementById("jqDiff").textContent=q.diff;
   document.getElementById("jqQ").textContent=q.q;
   document.getElementById("jqMsg").textContent="Choose an answer.";
   document.getElementById("jqExplain").classList.add("hidden");
@@ -1441,8 +1525,9 @@ async function showCountdown(teamName,secs=4){
 }
 
 /* ── SCORING ─────────────────────────────────────── */
-const PTS={Easy:10,Medium:20,Hard:30};
-function awardPts(diff){score[active]+=(PTS[diff]||10);updateSB();}
+const PTS=10;
+function currentPts(){return gameSecsLeft<=10?PTS*2:PTS;}
+function awardPts(){score[active]+=currentPts();updateSB();}
 
 /* ── TURN END ────────────────────────────────────── */
 async function endTurnAndSwitch(msgHtml){
@@ -1481,15 +1566,15 @@ async function handleAnswer(idx){
   if(!awaitingQ||!currentQ)return;
   stopQTimer();setAnsBtnsEnabled(false);
   const btns=Array.from(document.getElementById("jqAns").querySelectorAll("button"));
-  const diff=currentQ.diff;
   if(idx===currentQ.correct){
     btns[idx].classList.add("correct");
     beep(740,120);
-    const pts=PTS[diff];
-    document.getElementById("jqMsg").innerHTML=`<span class="good">✅ Correct! +${pts} points!</span>`;
+    const pts=currentPts();
+    const bonus=pts>PTS?` <span style="color:#facc15;font-size:11px;">🔥 DOUBLE POINTS!</span>`:"";
+    document.getElementById("jqMsg").innerHTML=`<span class="good">✅ Correct! +${pts} points!${bonus}</span>`;
     document.getElementById("jqExplain").classList.remove("hidden");
     document.getElementById("jqExplain").textContent="Explanation: "+currentQ.explain;
-    awardPts(diff);
+    awardPts();
     await delay(2000);
     await endTurnAndSwitch(`<span class="good">Correct!</span> ${getTeamName(active)} +${pts} pts. Turn switches.`);
   } else {
@@ -1513,11 +1598,9 @@ async function onMistake(expected,got){
 /* ── PATTERN COMPLETE → QUESTION ─────────────────── */
 async function onPatternComplete(){
   locked=true;setPads(false);
-  const choice=document.getElementById("diffSelect").value;
-  const diff=choice==="auto"?autoDiff(patternLevel):choice;
   setStatus(`<span class="good">Pattern complete!</span> Answer the question…`);
   await delay(400);
-  showQuiz(pickQ(diff));
+  showQuiz(pickQ());
 }
 
 /* ── PAD INPUT ───────────────────────────────────── */
