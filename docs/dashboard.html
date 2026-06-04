@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="theme-color" content="#0f0d25"/>
+  <link rel="manifest" href="manifest.json"/>
   <style>
     :root {
       --bg:          #0f0d25;
@@ -1814,8 +1815,10 @@ async function openSurahReader(n,en,ar){
       fetch(`https://api.alquran.cloud/v1/surah/${n}/editions/quran-uthmani,en.sahih`),
       fetch(`https://api.qurancdn.com/api/qdc/verses/by_chapter/${n}?words=true&word_fields=text_uthmani,audio_url&per_page=300`)
     ]);
+    if(!r1.ok) throw new Error(`alquran API ${r1.status}`);
     const j1=await r1.json();
-    const j2=await r2.json();
+    const j2=r2.ok ? await r2.json() : {verses:[]};
+    if(!j1?.data?.[0]?.ayahs || !j1?.data?.[1]?.ayahs) throw new Error('bad payload');
     const arabicAyahs=j1.data[0].ayahs;
     const englishAyahs=j1.data[1].ayahs;
     // Build word audio map: "verseNum-wordPos" -> audio_url
@@ -2052,12 +2055,23 @@ function initHadith(){
   document.getElementById("hadithSource").textContent="— "+h.s;
 }
 
-/* ── PRAYER TIMES — NEW YORK ─────────────────────── */
+/* ── PRAYER TIMES ────────────────────────────────── */
+let _userLat=null,_userLng=null,_userCity=null;
 async function initPrayerTimes(){
   try{
     const today=new Date().toLocaleDateString("en-US",{timeZone:"America/New_York",day:"2-digit",month:"2-digit",year:"numeric"});
-    const r=await fetch(`https://api.aladhan.com/v1/timingsByCity?city=New%20York&country=US&method=2`);
+    let url,locLabel;
+    if(_userLat!==null){
+      url=`https://api.aladhan.com/v1/timings?latitude=${_userLat}&longitude=${_userLng}&method=2`;
+      locLabel=_userCity||`${_userLat.toFixed(2)}, ${_userLng.toFixed(2)}`;
+    }else{
+      url=`https://api.aladhan.com/v1/timingsByCity?city=New%20York&country=US&method=2`;
+      locLabel="New York";
+    }
+    const r=await fetch(url);
+    if(!r.ok) throw new Error(`aladhan ${r.status}`);
     const d=await r.json();
+    if(!d?.data?.timings) throw new Error('bad payload');
     const T=d.data.timings;
     const prayers=["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"];
     const now=new Date();
@@ -2078,23 +2092,32 @@ async function initPrayerTimes(){
         <div class="prayer-name">${p}</div>
         <div class="prayer-time${i===nextIdx?" next-prayer":""}">${fmt(T[p])}</div>
       </div>`).join("");
-    document.getElementById("prayerLoc").textContent="New York · "+today;
+    document.getElementById("prayerLoc").textContent=locLabel+" · "+today;
     widget.style.display="";
-  }catch{}
+  }catch(e){
+    const w=document.getElementById("prayerWidget");
+    if(w){w.style.display="";w.querySelector&&(w.querySelector("#prayerRow")||w).innerHTML='<div style="color:#c9a84c;text-align:center;padding:8px">Prayer times unavailable</div>';}
+  }
 }
 
 /* ── QIBLA ───────────────────────────────────────── */
 async function initQibla(){
   try{
-    const r=await fetch("https://api.aladhan.com/v1/qibla/40.7128/-74.0060");
+    const lat=_userLat??40.7128,lng=_userLng??-74.0060;
+    const r=await fetch(`https://api.aladhan.com/v1/qibla/${lat}/${lng}`);
+    if(!r.ok) throw new Error(`qibla ${r.status}`);
     const d=await r.json();
+    if(!d?.data?.direction) throw new Error('bad payload');
     const deg=d.data.direction;
     const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
     const cardinal=dirs[Math.round(deg/22.5)%16];
     document.getElementById("qiblaNeedle").style.transform=`rotate(${deg}deg)`;
     document.getElementById("qiblaDeg").textContent=`${Math.round(deg)}° ${cardinal}`;
     document.getElementById("qiblaWidget").style.display="";
-  }catch{}
+  }catch(e){
+    const w=document.getElementById("qiblaWidget");
+    if(w){w.style.display="";const d=w.querySelector("#qiblaDeg");if(d)d.textContent="Unavailable";}
+  }
 }
 
 function scheduleMidnightRefresh(){
@@ -2309,12 +2332,28 @@ function resetProgress(){
 }
 
 /* ── INIT ────────────────────────────────────────── */
-renderSurahs();renderLetters();renderNames();initHadith();initPrayerTimes();initQibla();scheduleMidnightRefresh();initTheme();
+renderSurahs();renderLetters();renderNames();initHadith();scheduleMidnightRefresh();initTheme();
+(function initLocation(){
+  if(!navigator.geolocation){initPrayerTimes();initQibla();return;}
+  navigator.geolocation.getCurrentPosition(
+    async pos=>{
+      _userLat=pos.coords.latitude;_userLng=pos.coords.longitude;
+      try{
+        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${_userLat}&lon=${_userLng}&format=json`);
+        if(r.ok){const j=await r.json();_userCity=j.address?.city||j.address?.town||j.address?.village||null;}
+      }catch{}
+      initPrayerTimes();initQibla();
+    },
+    ()=>{initPrayerTimes();initQibla();},
+    {timeout:5000,maximumAge:3600000}
+  );
+})();
 // restore sound pref
 (()=>{const s=localStorage.getItem("qq_sound");if(s==="0"){soundEnabled=false;const t=document.getElementById("soundToggle");if(t)t.checked=false;}})();
 let patSpeedMs=400;
 function saveSpeed(){const v=Number(document.getElementById("speedSelect").value);patSpeedMs=v;localStorage.setItem("qq_speed",v);}
 (()=>{const v=localStorage.getItem("qq_speed");if(v){patSpeedMs=Number(v);const el=document.getElementById("speedSelect");if(el)el.value=v;}})();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
 </body>
 </html>
