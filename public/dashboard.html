@@ -2096,7 +2096,7 @@ async function initPrayerTimes(){
     widget.style.display="";
   }catch(e){
     const w=document.getElementById("prayerWidget");
-    if(w){w.style.display="";w.querySelector&&(w.querySelector("#prayerRow")||w).innerHTML='<div style="color:#c9a84c;text-align:center;padding:8px">Prayer times unavailable</div>';}
+    if(w){w.style.display="";const row=w.querySelector("#prayerRow");if(row)row.innerHTML='<div style="color:#c9a84c;text-align:center;padding:8px">Prayer times unavailable</div>';}
   }
 }
 
