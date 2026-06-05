@@ -548,14 +548,13 @@
     .trace-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:16px;border:1px solid var(--gold-border);background:var(--surface);overflow:hidden;touch-action:none;}
     .trace-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;color:var(--gold-light);opacity:.12;pointer-events:none;font-family:Georgia,serif;user-select:none;}
     .trace-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;}
-    /* Green success burst */
-    .burst-particle{position:fixed;border-radius:50%;pointer-events:none;z-index:10001;
-      transform:translate(-50%,-50%);opacity:0;box-shadow:0 0 10px rgba(52,211,153,.8);
-      animation:burstFly .8s cubic-bezier(.2,.8,.3,1) forwards;}
-    @keyframes burstFly{
-      0%{opacity:1;transform:translate(-50%,-50%) scale(.3);}
-      70%{opacity:1;}
-      100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(1.15);}
+    /* Confetti rain success celebration */
+    .confetti-piece{position:fixed;z-index:10001;pointer-events:none;opacity:0;
+      animation:confettiFall var(--dur,1.4s) cubic-bezier(.25,.6,.4,1) forwards;}
+    @keyframes confettiFall{
+      0%{opacity:1;transform:translate(0,0) rotateZ(0deg);}
+      85%{opacity:1;}
+      100%{opacity:0;transform:translate(var(--dx),var(--fall)) rotateZ(var(--spin));}
     }
     .trace-wrap.success-flash{animation:successFlash .7s ease-out;}
     @keyframes successFlash{
@@ -2372,26 +2371,27 @@ function fitWordGuide(word){
 }
 function greenBurst(){
   const box=document.getElementById("traceWrap");
-  if(!box)return;
-  box.classList.remove("success-flash");void box.offsetWidth;box.classList.add("success-flash");
-  const r=box.getBoundingClientRect();
-  const cx=r.left+r.width/2, cy=r.top+r.height/2;
-  const greens=["#34d399","#22c55e","#4ade80","#16a34a","#86efac","#10b981","#bbf7d0"];
-  const N=26;
+  if(box){box.classList.remove("success-flash");void box.offsetWidth;box.classList.add("success-flash");}
+  const modal=document.getElementById("letterModal");
+  const r=(modal||document.body).getBoundingClientRect();
+  const colors=["#34d399","#22c55e","#4ade80","#86efac","#10b981","#e8c96d","#c9a84c","#fde68a"];
+  const N=46;
   for(let i=0;i<N;i++){
-    const p=document.createElement("div");
-    p.className="burst-particle";
-    const ang=(Math.PI*2*i/N)+(Math.random()*0.4-0.2);
-    const dist=70+Math.random()*100;
-    p.style.setProperty("--tx",(Math.cos(ang)*dist).toFixed(1)+"px");
-    p.style.setProperty("--ty",(Math.sin(ang)*dist).toFixed(1)+"px");
-    p.style.left=cx+"px";p.style.top=cy+"px";
-    const sz=7+Math.random()*10;
-    p.style.width=sz+"px";p.style.height=sz+"px";
-    p.style.background=greens[i%greens.length];
-    p.style.animationDelay=(Math.random()*70)+"ms";
-    document.body.appendChild(p);
-    setTimeout(()=>p.remove(),950);
+    const c=document.createElement("div");
+    c.className="confetti-piece";
+    c.style.left=(r.left+Math.random()*r.width)+"px";
+    c.style.top=(r.top-20)+"px";
+    c.style.background=colors[i%colors.length];
+    const w=6+Math.random()*7, h=10+Math.random()*8;
+    c.style.width=w+"px";c.style.height=h+"px";
+    if(Math.random()<0.3)c.style.borderRadius="50%";
+    c.style.setProperty("--fall",(r.height*0.9+Math.random()*120)+"px");
+    c.style.setProperty("--dx",((Math.random()*2-1)*60)+"px");
+    c.style.setProperty("--spin",(360+Math.random()*720)+"deg");
+    c.style.setProperty("--dur",(1.1+Math.random()*0.8)+"s");
+    c.style.animationDelay=(Math.random()*250)+"ms";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),2300);
   }
 }
 
@@ -2541,34 +2541,47 @@ function scoreTrace(){
     if(uOn)userPx++;
     if(gOn&&uOn)overlapPx++;
   }
-  if(templatePx===0||userPx===0)return 0;
-  const recall=overlapPx/templatePx;       // how much of the letter was covered
-  const precision=overlapPx/userPx;        // how little was drawn outside
-  // Beginner-friendly: recall weighted higher, +10 base so any real attempt scores well
-  const raw=((recall*0.75)+(precision*0.25))*100;
-  return Math.min(100, Math.round(raw + 10));
+  if(templatePx===0||userPx===0){_lastRecall=0;_lastPrecision=0;return 0;}
+  const recall=overlapPx/templatePx;       // how much of the guide was covered
+  const precision=overlapPx/userPx;        // how little was drawn outside the guide
+  _lastRecall=recall;_lastPrecision=precision;
+  // Default (letter) weighting — no freebie bonus; submitTrace gates by mode
+  return Math.round(((recall*0.6)+(precision*0.4))*100);
 }
+let _lastRecall=0,_lastPrecision=0;
 
 function submitTrace(){
-  const score=scoreTrace();
+  scoreTrace();
+  const recall=_lastRecall,precision=_lastPrecision;
   const traceResultEl=document.getElementById("traceResult");
-  if(score<2){
-    traceResultEl.innerHTML=`<span style="color:#fb7185">✗ Try drawing something — follow the faded guide!</span>`;
+  if(modalMode==="word"){
+    // ── WORD MODE (strict): scribbles have low precision → fail ──
+    const score=Math.round(((recall*0.5)+(precision*0.5))*100);
+    const PASS=45, RECALL_MIN=0.40, PREC_MIN=0.45;
+    if(score<PASS||recall<RECALL_MIN||precision<PREC_MIN){
+      traceResultEl.innerHTML=`<span style="color:#fb7185">✗ Trace the word carefully — follow the faded guide (${score}%)</span>`;
+      beep(200,200);
+      return;
+    }
+    traceResultEl.innerHTML=`<span style="color:#4ade80">🌟 Mashallah! Next word… (${score}%)</span>`;
+    beep(660,120);
+    if(traceTarget)speakArabic(traceTarget);
+    greenBurst();
+    setTimeout(()=>{openWordModal((currentWordIndex+1)%TRACE_WORDS.length);},1800);
+    return;
+  }
+  // ── LETTER MODE (medium): a reasonable trace required ──
+  const score=Math.round(((recall*0.6)+(precision*0.4))*100);
+  const PASS=25, RECALL_MIN=0.30;
+  if(score<PASS||recall<RECALL_MIN){
+    traceResultEl.innerHTML=`<span style="color:#fb7185">✗ Follow the guide more closely (${score}%)</span>`;
     beep(200,200);
     return;
   }
-  const grade=score>=40?"🌟 Great match!":score>=15?"✓ Good effort!":"~ Nice try, keep going!";
-  const col=score>=40?"#4ade80":score>=15?"#e8c96d":"#a78bfa";
+  const grade=score>=60?"🌟 Great match!":score>=40?"✓ Good effort!":"~ Keep practising!";
+  const col=score>=60?"#4ade80":score>=40?"#e8c96d":"#a78bfa";
   traceResultEl.innerHTML=`<span style="color:${col}">${grade} (${score}% match)</span>`;
-  beep(score>=45?660:330,120);
-  // Word mode: celebrate (green burst + audio), then advance to next word
-  if(modalMode==="word"){
-    traceResultEl.innerHTML=`<span style="color:#4ade80">🌟 Mashallah! Next word…</span>`;
-    if(traceTarget)speakArabic(traceTarget);
-    greenBurst();
-    setTimeout(()=>{openWordModal((currentWordIndex+1)%TRACE_WORDS.length);},1500);
-    return;
-  }
+  beep(score>=60?660:330,120);
   // Letter mode: proceed to position quiz
   const quiz=LETTER_QUIZ[currentModalLetter];
   if(!quiz)return;
