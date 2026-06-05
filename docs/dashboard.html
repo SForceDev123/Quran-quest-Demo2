@@ -350,6 +350,24 @@
       z-index:8888;
     }
     .countdown-overlay.hidden{display:none;}
+    .adhan-banner{
+      position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-160%);
+      width:calc(100% - 24px);max-width:440px;z-index:9999;
+      display:flex;align-items:center;gap:12px;padding:14px 14px;
+      background:linear-gradient(135deg,#201c42,#2d2658);
+      border:1px solid var(--gold-border);border-radius:18px;
+      box-shadow:0 12px 40px rgba(0,0,0,.55),0 0 40px rgba(232,201,109,.18);
+      transition:transform .45s cubic-bezier(.2,.9,.3,1.2);
+    }
+    .adhan-banner.show{transform:translateX(-50%) translateY(0);}
+    .adhan-banner.hidden{display:none;}
+    .adhan-icon{font-size:34px;line-height:1;}
+    .adhan-text{flex:1;min-width:0;}
+    .adhan-title{font-size:15px;font-weight:800;color:var(--gold-light);}
+    .adhan-sub{font-size:12px;color:rgba(201,168,76,.7);direction:rtl;text-align:left;}
+    .adhan-btn{background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold-light);
+      font-family:inherit;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;}
+    .adhan-close{background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 6px;}
     .cd-team{font-size:15px;font-weight:700;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;}
     .cd-num{font-size:100px;font-weight:900;color:var(--gold-light);line-height:1;text-shadow:0 0 50px rgba(232,201,109,.5);}
     .cd-sub{font-size:14px;color:rgba(201,168,76,.55);margin-top:12px;letter-spacing:2px;}
@@ -983,6 +1001,13 @@
       </label>
     </div>
     <div class="setting-row">
+      <div class="setting-label">🕌 Adhan at prayer times</div>
+      <label class="toggle">
+        <input type="checkbox" id="adhanToggle" checked onchange="setAdhanEnabled(this.checked)"/>
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+    <div class="setting-row">
       <div class="setting-label">🌙 Dark Mode</div>
       <div class="toggle-wrap">
         <span class="toggle-emoji" id="themeEmoji">🌙</span>
@@ -1031,6 +1056,17 @@
   <div class="cd-team" id="cdTeamLabel">Team A's Turn</div>
   <div class="cd-num" id="cdNum">3</div>
   <div class="cd-sub">Get ready…</div>
+</div>
+
+<!-- Prayer / Adhan notification banner -->
+<div id="adhanBanner" class="adhan-banner hidden">
+  <div class="adhan-icon">🕌</div>
+  <div class="adhan-text">
+    <div class="adhan-title" id="adhanTitle">It's time for prayer</div>
+    <div class="adhan-sub" id="adhanSub">Allahu Akbar — حَيَّ على الصلاة</div>
+  </div>
+  <button class="adhan-btn" id="adhanToggleBtn" onclick="toggleAdhanPlayback()">⏸ Stop</button>
+  <button class="adhan-close" onclick="dismissAdhanBanner()">✕</button>
 </div>
 
 <div id="gameoverOverlay" class="gameover-overlay hidden">
@@ -2103,10 +2139,77 @@ async function initPrayerTimes(){
       </div>`).join("");
     document.getElementById("prayerLoc").textContent=locLabel+" · "+today;
     widget.style.display="";
+    // Schedule adhan + banner using the location's real timezone
+    _prayerTimes={Fajr:T.Fajr,Dhuhr:T.Dhuhr,Asr:T.Asr,Maghrib:T.Maghrib,Isha:T.Isha};
+    _prayerTz=d.data.meta?.timezone||"America/New_York";
+    startAdhanWatcher();
   }catch(e){
     const w=document.getElementById("prayerWidget");
     if(w){w.style.display="";const row=w.querySelector("#prayerRow");if(row)row.innerHTML='<div style="color:#c9a84c;text-align:center;padding:8px">Prayer times unavailable</div>';}
   }
+}
+
+/* ── ADHAN / PRAYER ALERTS ───────────────────────── */
+let _prayerTimes=null,_prayerTz=null,_adhanWatch=null,_adhanFired=new Set(),_adhanAudio=null;
+let adhanEnabled=true;
+const ADHAN_URL="https://www.islamcan.com/audio/adhan/azan2.mp3";
+function setAdhanEnabled(on){
+  adhanEnabled=on;
+  localStorage.setItem("qq_adhan",on?"1":"0");
+  if(!on)stopAdhan();
+}
+function startAdhanWatcher(){
+  if(_adhanWatch)clearInterval(_adhanWatch);
+  checkPrayerNow();
+  _adhanWatch=setInterval(checkPrayerNow,20000); // check every 20s
+}
+function checkPrayerNow(){
+  if(!_prayerTimes||!_prayerTz||!adhanEnabled)return;
+  // current HH:MM and date in the prayer-times timezone
+  const nowHM=new Date().toLocaleTimeString("en-GB",{timeZone:_prayerTz,hour:"2-digit",minute:"2-digit",hour12:false});
+  const today=new Date().toLocaleDateString("en-CA",{timeZone:_prayerTz});
+  for(const[name,t]of Object.entries(_prayerTimes)){
+    const hm=(t||"").slice(0,5); // API time "HH:MM"
+    const key=today+"|"+name;
+    if(hm===nowHM&&!_adhanFired.has(key)){
+      _adhanFired.add(key);
+      triggerAdhan(name);
+    }
+  }
+}
+function triggerAdhan(prayerName){
+  showAdhanBanner(prayerName);
+  playAdhan();
+}
+function showAdhanBanner(prayerName){
+  const b=document.getElementById("adhanBanner");
+  document.getElementById("adhanTitle").textContent=`It's time for ${prayerName} prayer`;
+  b.classList.remove("hidden");
+  requestAnimationFrame(()=>b.classList.add("show"));
+}
+function dismissAdhanBanner(){
+  const b=document.getElementById("adhanBanner");
+  b.classList.remove("show");
+  setTimeout(()=>b.classList.add("hidden"),450);
+  stopAdhan();
+}
+function playAdhan(){
+  if(!adhanEnabled)return;
+  stopAdhan();
+  _adhanAudio=new Audio(ADHAN_URL);
+  _adhanAudio.onended=()=>{setAdhanBtn(false);};
+  _adhanAudio.play().then(()=>setAdhanBtn(true)).catch(()=>setAdhanBtn(false));
+}
+function stopAdhan(){
+  if(_adhanAudio){_adhanAudio.pause();_adhanAudio.currentTime=0;_adhanAudio=null;}
+  setAdhanBtn(false);
+}
+function setAdhanBtn(playing){
+  const btn=document.getElementById("adhanToggleBtn");
+  if(btn)btn.textContent=playing?"⏸ Stop":"▶ Play Adhan";
+}
+function toggleAdhanPlayback(){
+  if(_adhanAudio){stopAdhan();}else{adhanEnabled=true;playAdhan();}
 }
 
 /* ── QIBLA ───────────────────────────────────────── */
@@ -2364,6 +2467,8 @@ renderSurahs();renderLetters();renderNames();initHadith();scheduleMidnightRefres
 })();
 // restore sound pref
 (()=>{const s=localStorage.getItem("qq_sound");if(s==="0"){soundEnabled=false;const t=document.getElementById("soundToggle");if(t)t.checked=false;}})();
+// restore adhan pref
+(()=>{const a=localStorage.getItem("qq_adhan");if(a==="0"){adhanEnabled=false;const t=document.getElementById("adhanToggle");if(t)t.checked=false;}})();
 let patSpeedMs=400;
 function saveSpeed(){const v=Number(document.getElementById("speedSelect").value);patSpeedMs=v;localStorage.setItem("qq_speed",v);}
 (()=>{const v=localStorage.getItem("qq_speed");if(v){patSpeedMs=Number(v);const el=document.getElementById("speedSelect");if(el)el.value=v;}})();
