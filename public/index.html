@@ -2357,12 +2357,13 @@ renderSurahs();renderLetters();renderNames();initHadith();scheduleMidnightRefres
 let patSpeedMs=400;
 function saveSpeed(){const v=Number(document.getElementById("speedSelect").value);patSpeedMs=v;localStorage.setItem("qq_speed",v);}
 (()=>{const v=localStorage.getItem("qq_speed");if(v){patSpeedMs=Number(v);const el=document.getElementById("speedSelect");if(el)el.value=v;}})();
+/* Kill switch: remove any old service worker + cached copies so every
+   device always loads the latest version straight from the network. */
 if('serviceWorker' in navigator){
-  let _reloaded=false;
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(_reloaded)return;_reloaded=true;location.reload();
-  });
-  navigator.serviceWorker.register('sw.js').then(reg=>{reg.update();}).catch(()=>{});
+  navigator.serviceWorker.getRegistrations().then(rs=>{rs.forEach(r=>r.unregister());}).catch(()=>{});
+}
+if(window.caches&&caches.keys){
+  caches.keys().then(ks=>{ks.forEach(k=>caches.delete(k));}).catch(()=>{});
 }
 </script>
 </body>
