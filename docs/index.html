@@ -548,6 +548,21 @@
     .trace-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:16px;border:1px solid var(--gold-border);background:var(--surface);overflow:hidden;touch-action:none;}
     .trace-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;color:var(--gold-light);opacity:.12;pointer-events:none;font-family:Georgia,serif;user-select:none;}
     .trace-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;}
+    /* Green success burst */
+    .burst-particle{position:fixed;border-radius:50%;pointer-events:none;z-index:10001;
+      transform:translate(-50%,-50%);opacity:0;box-shadow:0 0 10px rgba(52,211,153,.8);
+      animation:burstFly .8s cubic-bezier(.2,.8,.3,1) forwards;}
+    @keyframes burstFly{
+      0%{opacity:1;transform:translate(-50%,-50%) scale(.3);}
+      70%{opacity:1;}
+      100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(1.15);}
+    }
+    .trace-wrap.success-flash{animation:successFlash .7s ease-out;}
+    @keyframes successFlash{
+      0%{box-shadow:0 0 0 0 rgba(52,211,153,0);border-color:var(--gold-border);}
+      30%{box-shadow:0 0 30px 6px rgba(52,211,153,.55);border-color:#34d399;}
+      100%{box-shadow:0 0 0 0 rgba(52,211,153,0);border-color:var(--gold-border);}
+    }
     .trace-controls{display:flex;gap:8px;}
     .trace-btn{flex:1;padding:10px;border-radius:12px;border:1px solid var(--gold-border);background:var(--surface);color:var(--muted);font-size:13px;font-family:inherit;cursor:pointer;}
     .trace-btn.primary{border-color:var(--gold);color:var(--gold-light);background:var(--gold-dim);}
@@ -2315,8 +2330,10 @@ function renderWords(){
       <span class="word-cell-tr">${w.tr}</span>
     </div>`).join("");
 }
+let currentWordIndex=0;
 function openWordModal(i){
   const w=TRACE_WORDS[i];
+  currentWordIndex=i;
   modalMode="word";traceTarget=w.ar;currentModalLetter="";
   document.getElementById("letterModalTitle").textContent="Trace the Word";
   // Big word instead of single letter
@@ -2333,6 +2350,7 @@ function openWordModal(i){
   guide.textContent=w.ar;guide.style.fontFamily="'Amiri','Noto Naskh Arabic',serif";guide.style.direction="rtl";
   document.getElementById("letterQuiz").style.display="none";
   document.getElementById("letterModalBg").classList.remove("hidden");
+  document.getElementById("traceResult").textContent="";
   initTraceCanvas();
   fitWordGuide(w.ar);  // size to ~88% of the box width, slight margin
 }
@@ -2351,6 +2369,30 @@ function fitWordGuide(word){
   size=Math.max(size,24);
   _wordGuidePx=size;
   document.getElementById("traceGuide").style.fontSize=size+"px";
+}
+function greenBurst(){
+  const box=document.getElementById("traceWrap");
+  if(!box)return;
+  box.classList.remove("success-flash");void box.offsetWidth;box.classList.add("success-flash");
+  const r=box.getBoundingClientRect();
+  const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const greens=["#34d399","#22c55e","#4ade80","#16a34a","#86efac","#10b981","#bbf7d0"];
+  const N=26;
+  for(let i=0;i<N;i++){
+    const p=document.createElement("div");
+    p.className="burst-particle";
+    const ang=(Math.PI*2*i/N)+(Math.random()*0.4-0.2);
+    const dist=70+Math.random()*100;
+    p.style.setProperty("--tx",(Math.cos(ang)*dist).toFixed(1)+"px");
+    p.style.setProperty("--ty",(Math.sin(ang)*dist).toFixed(1)+"px");
+    p.style.left=cx+"px";p.style.top=cy+"px";
+    const sz=7+Math.random()*10;
+    p.style.width=sz+"px";p.style.height=sz+"px";
+    p.style.background=greens[i%greens.length];
+    p.style.animationDelay=(Math.random()*70)+"ms";
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),950);
+  }
 }
 
 /* ── LETTER MODAL ──────────────────────────────────── */
@@ -2519,9 +2561,12 @@ function submitTrace(){
   const col=score>=40?"#4ade80":score>=15?"#e8c96d":"#a78bfa";
   traceResultEl.innerHTML=`<span style="color:${col}">${grade} (${score}% match)</span>`;
   beep(score>=45?660:330,120);
-  // Word mode: celebrate + play the word audio, no position quiz
+  // Word mode: celebrate (green burst + audio), then advance to next word
   if(modalMode==="word"){
+    traceResultEl.innerHTML=`<span style="color:#4ade80">🌟 Mashallah! Next word…</span>`;
     if(traceTarget)speakArabic(traceTarget);
+    greenBurst();
+    setTimeout(()=>{openWordModal((currentWordIndex+1)%TRACE_WORDS.length);},1500);
     return;
   }
   // Letter mode: proceed to position quiz
