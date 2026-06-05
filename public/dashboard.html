@@ -1484,7 +1484,7 @@ function showQuiz(q){
   jq.classList.remove("hidden");jq.setAttribute("aria-hidden","false");
   document.getElementById("jqTitle").textContent=getTeamName(active)+" • Question";
   document.getElementById("jqQar").textContent=q.aq||"";
-  document.getElementById("jqQ").textContent=q.aq?"":q.q;  /* Arabic only; English fallback if aq missing */
+  document.getElementById("jqQ").textContent=q.q;  /* English under Arabic (bilingual) */
   document.getElementById("jqMsg").textContent="Choose an answer.";
   document.getElementById("jqExplain").classList.add("hidden");
   const ans=document.getElementById("jqAns");
