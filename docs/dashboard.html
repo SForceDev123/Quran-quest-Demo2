@@ -2328,13 +2328,29 @@ function openWordModal(i){
   ctx.innerHTML=`<div dir="rtl" style="font-family:'Amiri','Noto Naskh Arabic',serif;font-size:16px;line-height:1.7;margin-bottom:6px;">${w.ctxAr||""}</div>`+
     `<div style="font-size:12.5px;line-height:1.5;color:var(--muted);">${w.context}</div>`;
   ctx.style.display="";
-  // Faded guide = the word (Arabic font, sized to fit the box)
+  // Faded guide = the word (Arabic font, sized to almost fill the box)
   const guide=document.getElementById("traceGuide");
-  guide.textContent=w.ar;guide.style.fontFamily="'Amiri','Noto Naskh Arabic',serif";
-  guide.style.fontSize=(w.ar.replace(/\s/g,"").length>8?84:w.ar.replace(/\s/g,"").length>5?108:132)+"px";guide.style.direction="rtl";
+  guide.textContent=w.ar;guide.style.fontFamily="'Amiri','Noto Naskh Arabic',serif";guide.style.direction="rtl";
   document.getElementById("letterQuiz").style.display="none";
   document.getElementById("letterModalBg").classList.remove("hidden");
   initTraceCanvas();
+  fitWordGuide(w.ar);  // size to ~88% of the box width, slight margin
+}
+let _wordGuidePx=0;
+function fitWordGuide(word){
+  const wrap=document.getElementById("traceWrap");
+  const box=wrap.offsetWidth||300;
+  const fam="'Amiri','Noto Naskh Arabic',serif";
+  const mc=document.createElement("canvas").getContext("2d");
+  const ref=100;mc.font=`bold ${ref}px ${fam}`;
+  const wpx=mc.measureText(word).width||ref;
+  // largest size whose rendered width ≈ 82% of box, capped by height (~50% — Arabic
+  // glyphs + diacritics are tall, so cap low to keep a slight margin all around)
+  let size=Math.floor(ref*(box*0.82)/wpx);
+  size=Math.min(size,Math.floor(box*0.5));
+  size=Math.max(size,24);
+  _wordGuidePx=size;
+  document.getElementById("traceGuide").style.fontSize=size+"px";
 }
 
 /* ── LETTER MODAL ──────────────────────────────────── */
@@ -2467,7 +2483,7 @@ function scoreTrace(){
   const target=traceTarget||currentModalLetter;
   const isWord=modalMode==="word";
   // Fit the text within the canvas width (words need to shrink to fit)
-  let fontSize=isWord?Math.round(w*0.8):Math.round(w*0.7);
+  let fontSize=isWord?(_wordGuidePx||Math.round(w*0.8)):Math.round(w*0.7);
   const fam=isWord?"'Amiri','Noto Naskh Arabic',serif":"Georgia,serif";
   tc.textAlign="center";tc.textBaseline="middle";
   tc.font=`bold ${fontSize}px ${fam}`;
