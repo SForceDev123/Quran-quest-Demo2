@@ -2281,24 +2281,24 @@ function renderLetters(){
 
 /* ── TRACE WORDS (Islamic words/names/places with context) ── */
 const TRACE_WORDS=[
-  {ar:"مُحَمَّد",tr:"Muhammad ﷺ",type:"Name",context:"The final Prophet and Messenger of Allah ﷺ, born in Makkah."},
-  {ar:"اللَّه",tr:"Allah",type:"Name",context:"The one God — the Creator and Sustainer of all that exists."},
-  {ar:"إِبْرَاهِيم",tr:"Ibrahim",type:"Prophet",context:"Prophet Abraham — called Khalilullah, the friend of Allah."},
-  {ar:"مُوسَى",tr:"Musa",type:"Prophet",context:"Prophet Moses — given the Tawrah, spoke directly with Allah."},
-  {ar:"عِيسَى",tr:"Isa",type:"Prophet",context:"Prophet Jesus — born miraculously to Maryam, given the Injeel."},
-  {ar:"مَرْيَم",tr:"Maryam",type:"Name",context:"Mary, mother of Prophet Isa — honoured with a surah in her name."},
-  {ar:"مَكَّة",tr:"Makkah",type:"Place",context:"The holiest city in Islam, home of the Kaaba and the Hajj."},
-  {ar:"المَدِينَة",tr:"Al-Madinah",type:"Place",context:"The Prophet's ﷺ city — destination of the Hijrah, home of Masjid an-Nabawi."},
-  {ar:"الكَعْبَة",tr:"Al-Kaabah",type:"Place",context:"The cube-shaped House of Allah in Makkah that Muslims face in prayer."},
-  {ar:"القُدْس",tr:"Al-Quds",type:"Place",context:"Jerusalem — home of Masjid al-Aqsa, the first qiblah of Islam."},
-  {ar:"صَلَاة",tr:"Salah",type:"Term",context:"The five daily prayers — the second pillar of Islam."},
-  {ar:"زَكَاة",tr:"Zakah",type:"Term",context:"Obligatory charity — purifying wealth, a pillar of Islam."},
-  {ar:"إِيمَان",tr:"Iman",type:"Term",context:"Faith — belief in Allah, His angels, books, messengers, and more."},
-  {ar:"قُرْآن",tr:"Qur'an",type:"Term",context:"The holy book of Islam, revealed to Prophet Muhammad ﷺ."},
-  {ar:"جَنَّة",tr:"Jannah",type:"Term",context:"Paradise — the eternal reward promised to the believers."},
-  {ar:"صِيَام",tr:"Siyam",type:"Term",context:"Fasting, especially in Ramadan — a pillar of Islam."},
-  {ar:"بِسْمِ اللَّه",tr:"Bismillah",type:"Phrase",context:"“In the name of Allah” — said before beginning any action."},
-  {ar:"الحَمْدُ لله",tr:"Alhamdulillah",type:"Phrase",context:"“All praise is for Allah” — an expression of gratitude."}
+  {ar:"مُحَمَّد",tr:"Muhammad ﷺ",type:"Name",ctxAr:"النبيّ الخاتم ورسول الله ﷺ، وُلد في مكة.",context:"The final Prophet and Messenger of Allah ﷺ, born in Makkah."},
+  {ar:"اللَّه",tr:"Allah",type:"Name",ctxAr:"الإله الواحد، خالق كلّ شيء ومدبّره.",context:"The one God — the Creator and Sustainer of all that exists."},
+  {ar:"إِبْرَاهِيم",tr:"Ibrahim",type:"Prophet",ctxAr:"النبيّ إبراهيم عليه السلام، خليل الله.",context:"Prophet Abraham — called Khalilullah, the friend of Allah."},
+  {ar:"مُوسَى",tr:"Musa",type:"Prophet",ctxAr:"النبيّ موسى عليه السلام، كلّمه الله وأُنزلت عليه التوراة.",context:"Prophet Moses — given the Tawrah, spoke directly with Allah."},
+  {ar:"عِيسَى",tr:"Isa",type:"Prophet",ctxAr:"النبيّ عيسى عليه السلام، وُلد بمعجزة وأُنزل عليه الإنجيل.",context:"Prophet Jesus — born miraculously to Maryam, given the Injeel."},
+  {ar:"مَرْيَم",tr:"Maryam",type:"Name",ctxAr:"مريم أمّ النبيّ عيسى، لها سورة باسمها في القرآن.",context:"Mary, mother of Prophet Isa — honoured with a surah in her name."},
+  {ar:"مَكَّة",tr:"Makkah",type:"Place",ctxAr:"أقدس مدينة في الإسلام، فيها الكعبة والحجّ.",context:"The holiest city in Islam, home of the Kaaba and the Hajj."},
+  {ar:"المَدِينَة",tr:"Al-Madinah",type:"Place",ctxAr:"مدينة النبيّ ﷺ، مقصد الهجرة وفيها المسجد النبويّ.",context:"The Prophet's ﷺ city — destination of the Hijrah, home of Masjid an-Nabawi."},
+  {ar:"الكَعْبَة",tr:"Al-Kaabah",type:"Place",ctxAr:"بيت الله في مكة، يستقبله المسلمون في الصلاة.",context:"The cube-shaped House of Allah in Makkah that Muslims face in prayer."},
+  {ar:"القُدْس",tr:"Al-Quds",type:"Place",ctxAr:"القدس، فيها المسجد الأقصى أولى القِبلتين.",context:"Jerusalem — home of Masjid al-Aqsa, the first qiblah of Islam."},
+  {ar:"صَلَاة",tr:"Salah",type:"Term",ctxAr:"الصلوات الخمس، الركن الثاني من أركان الإسلام.",context:"The five daily prayers — the second pillar of Islam."},
+  {ar:"زَكَاة",tr:"Zakah",type:"Term",ctxAr:"الصدقة الواجبة التي تطهّر المال، ركن من أركان الإسلام.",context:"Obligatory charity — purifying wealth, a pillar of Islam."},
+  {ar:"إِيمَان",tr:"Iman",type:"Term",ctxAr:"الإيمان بالله وملائكته وكتبه ورسله.",context:"Faith — belief in Allah, His angels, books, messengers, and more."},
+  {ar:"قُرْآن",tr:"Qur'an",type:"Term",ctxAr:"كتاب الله المنزّل على النبيّ محمد ﷺ.",context:"The holy book of Islam, revealed to Prophet Muhammad ﷺ."},
+  {ar:"جَنَّة",tr:"Jannah",type:"Term",ctxAr:"الجنّة، جزاء المؤمنين الخالد.",context:"Paradise — the eternal reward promised to the believers."},
+  {ar:"صِيَام",tr:"Siyam",type:"Term",ctxAr:"الصيام، خاصّة في رمضان، ركن من أركان الإسلام.",context:"Fasting, especially in Ramadan — a pillar of Islam."},
+  {ar:"بِسْمِ اللَّه",tr:"Bismillah",type:"Phrase",ctxAr:"«باسم الله»، تُقال قبل البدء بأيّ عمل.",context:"“In the name of Allah” — said before beginning any action."},
+  {ar:"الحَمْدُ لله",tr:"Alhamdulillah",type:"Phrase",ctxAr:"«الحمد لله»، تعبير عن الشكر لله.",context:"“All praise is for Allah” — an expression of gratitude."}
 ];
 let letterMode="letters";
 function setLetterMode(m){
@@ -2325,11 +2325,13 @@ function openWordModal(i){
   document.getElementById("modalName").textContent=w.tr;
   document.getElementById("modalTranslit").textContent=w.type;
   const ctx=document.getElementById("wordContext");
-  ctx.textContent=w.context;ctx.style.display="";
+  ctx.innerHTML=`<div dir="rtl" style="font-family:'Amiri','Noto Naskh Arabic',serif;font-size:16px;line-height:1.7;margin-bottom:6px;">${w.ctxAr||""}</div>`+
+    `<div style="font-size:12.5px;line-height:1.5;color:var(--muted);">${w.context}</div>`;
+  ctx.style.display="";
   // Faded guide = the word (Arabic font, sized to fit the box)
   const guide=document.getElementById("traceGuide");
   guide.textContent=w.ar;guide.style.fontFamily="'Amiri','Noto Naskh Arabic',serif";
-  guide.style.fontSize=(w.ar.replace(/\s/g,"").length>6?44:64)+"px";guide.style.direction="rtl";
+  guide.style.fontSize=(w.ar.replace(/\s/g,"").length>8?64:w.ar.replace(/\s/g,"").length>5?86:104)+"px";guide.style.direction="rtl";
   document.getElementById("letterQuiz").style.display="none";
   document.getElementById("letterModalBg").classList.remove("hidden");
   initTraceCanvas();
@@ -2465,11 +2467,11 @@ function scoreTrace(){
   const target=traceTarget||currentModalLetter;
   const isWord=modalMode==="word";
   // Fit the text within the canvas width (words need to shrink to fit)
-  let fontSize=isWord?Math.round(w*0.42):Math.round(w*0.7);
+  let fontSize=isWord?Math.round(w*0.62):Math.round(w*0.7);
   const fam=isWord?"'Amiri','Noto Naskh Arabic',serif":"Georgia,serif";
   tc.textAlign="center";tc.textBaseline="middle";
   tc.font=`bold ${fontSize}px ${fam}`;
-  while(fontSize>16&&tc.measureText(target).width>w*0.9){fontSize-=4;tc.font=`bold ${fontSize}px ${fam}`;}
+  while(fontSize>16&&tc.measureText(target).width>w*0.92){fontSize-=4;tc.font=`bold ${fontSize}px ${fam}`;}
   tc.fillText(target,w/2,h/2);
   const guide=tc.getImageData(0,0,w,h).data;
   const user=traceCtx.getImageData(0,0,w,h).data;
