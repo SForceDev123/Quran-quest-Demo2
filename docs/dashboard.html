@@ -1049,7 +1049,7 @@
       </div>
       <div class="jqTimer" id="jqTimer">15</div>
     </div>
-    <div class="jqQar" id="jqQar" dir="rtl" style="font-size:1.5em;font-weight:700;color:var(--gold-light);text-align:center;margin:14px 0;font-family:Georgia,serif;line-height:1.7"></div>
+    <div class="jqQar" id="jqQar" dir="rtl" style="font-size:1.45em;font-weight:700;color:var(--gold-light);text-align:center;margin:14px 0 6px;font-family:'Amiri','Geeza Pro','Noto Naskh Arabic','Traditional Arabic','Segoe UI',serif;line-height:1.9"></div>
     <div class="jqQ" id="jqQ">…</div>
     <div class="jqAns" id="jqAns"></div>
     <div class="jqMsg" id="jqMsg">Choose an answer.</div>
@@ -1481,7 +1481,7 @@ function showQuiz(q){
   jq.classList.remove("hidden");jq.setAttribute("aria-hidden","false");
   document.getElementById("jqTitle").textContent=getTeamName(active)+" • Question";
   document.getElementById("jqQar").textContent=q.aq||"";
-  document.getElementById("jqQ").textContent="";  /* PHASE 1: Arabic only (English hidden) */
+  document.getElementById("jqQ").textContent=q.q;  /* PHASE 2: English under Arabic */
   document.getElementById("jqMsg").textContent="Choose an answer.";
   document.getElementById("jqExplain").classList.add("hidden");
   const ans=document.getElementById("jqAns");
