@@ -1,4 +1,4 @@
-const CACHE = 'qq-v3';
+const CACHE = 'qq-v4';
 const SHELL = ['index.html', 'dashboard.html', 'manifest.json'];
 
 self.addEventListener('install', e => {
@@ -15,23 +15,46 @@ self.addEventListener('activate', e => {
   );
 });
 
+function isHTML(req) {
+  return req.mode === 'navigate' ||
+    (req.headers.get('accept') || '').includes('text/html');
+}
+
 self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  // Always network-first for external APIs
+  const req = e.request;
+  const url = new URL(req.url);
+
+  // External APIs → network only (never cache)
   if (url.origin !== location.origin) {
-    e.respondWith(fetch(e.request).catch(() => new Response('', {status: 503})));
+    e.respondWith(fetch(req).catch(() => new Response('', { status: 503 })));
     return;
   }
-  // Cache-first for shell assets, network-first with cache fallback otherwise
+
+  // HTML pages → ALWAYS network when online; cache only as offline fallback.
+  // This guarantees users never get a stale app shell.
+  if (isHTML(req)) {
+    e.respondWith(
+      fetch(req)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(req, clone));
+          return res;
+        })
+        .catch(() => caches.match(req).then(r => r || caches.match('index.html')))
+    );
+    return;
+  }
+
+  // Other same-origin assets → network-first with cache fallback
   e.respondWith(
-    fetch(e.request)
+    fetch(req)
       .then(res => {
         if (res.ok) {
           const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          caches.open(CACHE).then(c => c.put(req, clone));
         }
         return res;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(req))
   );
 });
