@@ -2176,33 +2176,36 @@ function closeLetterModal(e){
   speechSynthesis.cancel();
   clearTrace();
 }
-// Alafasy recordings of isolated letters from Muqatta'at verses
-const LETTER_AUDIO={
-  "ا":"wbw/002_001_001.mp3","ل":"wbw/002_001_002.mp3","م":"wbw/002_001_003.mp3",
-  "ص":"wbw/007_001_004.mp3","ر":"wbw/010_001_003.mp3","ك":"wbw/019_001_001.mp3",
-  "ه":"wbw/019_001_002.mp3","ي":"wbw/019_001_003.mp3","ع":"wbw/019_001_004.mp3",
-  "ط":"wbw/020_001_001.mp3","س":"wbw/026_001_002.mp3","ح":"wbw/040_001_001.mp3",
-  "ق":"wbw/050_001_001.mp3","ن":"wbw/068_001_001.mp3"
+// Proper Arabic NAME of each letter (with diacritics) for accurate TTS pronunciation
+const LETTER_NAME_AR={
+  "ا":"أَلِف","ب":"بَاء","ت":"تَاء","ث":"ثَاء","ج":"جِيم","ح":"حَاء","خ":"خَاء",
+  "د":"دَال","ذ":"ذَال","ر":"رَاء","ز":"زَاي","س":"سِين","ش":"شِين","ص":"صَاد",
+  "ض":"ضَاد","ط":"طَاء","ظ":"ظَاء","ع":"عَيْن","غ":"غَيْن","ف":"فَاء","ق":"قَاف",
+  "ك":"كَاف","ل":"لَام","م":"مِيم","ن":"نُون","ه":"هَاء","و":"وَاو","ي":"يَاء"
 };
 let letterAudioObj=null;
 function pronounceLetter(){
   if(!currentModalLetter)return;
-  if(letterAudioObj){letterAudioObj.pause();letterAudioObj=null;}
-  const path=LETTER_AUDIO[currentModalLetter];
-  if(path){
-    letterAudioObj=new Audio(`https://audio.qurancdn.com/${path}`);
-    letterAudioObj.play().catch(()=>pronounceLetterTTS());
-  }else{
-    pronounceLetterTTS();
-  }
+  const name=LETTER_NAME_AR[currentModalLetter]||currentModalLetter;
+  speakArabic(name);
 }
-function pronounceLetterTTS(){
-  const name=ARABIC.find(a=>a[0]===currentModalLetter)?.[1]||currentModalLetter;
-  const utt=new SpeechSynthesisUtterance(name);
-  utt.lang="ar-SA";utt.rate=0.7;
-  const arVoice=speechSynthesis.getVoices().find(v=>v.lang.startsWith("ar"));
-  if(arVoice)utt.voice=arVoice;
-  speechSynthesis.cancel();speechSynthesis.speak(utt);
+function speakArabic(text){
+  if(!("speechSynthesis" in window))return;
+  speechSynthesis.cancel();
+  let done=false;
+  const speak=()=>{
+    if(done)return;done=true;
+    const utt=new SpeechSynthesisUtterance(text);
+    utt.lang="ar-SA";utt.rate=0.7;utt.pitch=1;
+    const voices=speechSynthesis.getVoices();
+    // Prefer a real Arabic voice; iOS "Maged"/"Majed", others by ar- lang
+    const arVoice=voices.find(v=>/maj?ed/i.test(v.name))||voices.find(v=>(v.lang||"").toLowerCase().startsWith("ar"));
+    if(arVoice)utt.voice=arVoice;
+    speechSynthesis.speak(utt);
+  };
+  // Voices may load asynchronously on first use
+  if(speechSynthesis.getVoices().length)speak();
+  else{speechSynthesis.onvoiceschanged=speak;setTimeout(speak,300);}
 }
 
 /* ── TRACE CANVAS ──────────────────────────────────── */
