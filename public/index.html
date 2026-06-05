@@ -1264,7 +1264,7 @@ function pickQ(){
   const b=_shuffledQ[_qIdx++];
   const labeled=b.choices.map((t,i)=>({t,ok:i===b.correct}));
   shuffle(labeled);
-  return{q:b.q,choices:labeled.map(x=>x.t),correct:labeled.findIndex(x=>x.ok),explain:b.explain};
+  return{aq:b.aq,q:b.q,choices:labeled.map(x=>x.t),correct:labeled.findIndex(x=>x.ok),explain:b.explain};
 }
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
@@ -1484,7 +1484,7 @@ function showQuiz(q){
   jq.classList.remove("hidden");jq.setAttribute("aria-hidden","false");
   document.getElementById("jqTitle").textContent=getTeamName(active)+" • Question";
   document.getElementById("jqQar").textContent=q.aq||"";
-  document.getElementById("jqQ").textContent=q.q;  /* PHASE 2: English under Arabic */
+  document.getElementById("jqQ").textContent=q.aq?"":q.q;  /* Arabic only; English fallback if aq missing */
   document.getElementById("jqMsg").textContent="Choose an answer.";
   document.getElementById("jqExplain").classList.add("hidden");
   const ans=document.getElementById("jqAns");
