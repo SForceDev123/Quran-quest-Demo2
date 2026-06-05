@@ -2557,7 +2557,7 @@ function submitTrace(){
   if(modalMode==="word"){
     // ── WORD MODE (strict): scribbles have low precision → fail ──
     const score=Math.round(((recall*0.5)+(precision*0.5))*100);
-    const PASS=45, RECALL_MIN=0.40, PREC_MIN=0.45;
+    const PASS=35, RECALL_MIN=0.32, PREC_MIN=0.38;
     if(score<PASS||recall<RECALL_MIN||precision<PREC_MIN){
       traceResultEl.innerHTML=`<span style="color:#fb7185">✗ Trace the word carefully — follow the faded guide (${score}%)</span>`;
       beep(200,200);
@@ -2572,7 +2572,7 @@ function submitTrace(){
   }
   // ── LETTER MODE (medium): a reasonable trace required ──
   const score=Math.round(((recall*0.6)+(precision*0.4))*100);
-  const PASS=25, RECALL_MIN=0.30;
+  const PASS=18, RECALL_MIN=0.22;
   if(score<PASS||recall<RECALL_MIN){
     traceResultEl.innerHTML=`<span style="color:#fb7185">✗ Follow the guide more closely (${score}%)</span>`;
     beep(200,200);
