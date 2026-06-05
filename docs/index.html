@@ -2331,7 +2331,7 @@ function openWordModal(i){
   // Faded guide = the word (Arabic font, sized to fit the box)
   const guide=document.getElementById("traceGuide");
   guide.textContent=w.ar;guide.style.fontFamily="'Amiri','Noto Naskh Arabic',serif";
-  guide.style.fontSize=(w.ar.replace(/\s/g,"").length>8?64:w.ar.replace(/\s/g,"").length>5?86:104)+"px";guide.style.direction="rtl";
+  guide.style.fontSize=(w.ar.replace(/\s/g,"").length>8?84:w.ar.replace(/\s/g,"").length>5?108:132)+"px";guide.style.direction="rtl";
   document.getElementById("letterQuiz").style.display="none";
   document.getElementById("letterModalBg").classList.remove("hidden");
   initTraceCanvas();
@@ -2467,11 +2467,11 @@ function scoreTrace(){
   const target=traceTarget||currentModalLetter;
   const isWord=modalMode==="word";
   // Fit the text within the canvas width (words need to shrink to fit)
-  let fontSize=isWord?Math.round(w*0.62):Math.round(w*0.7);
+  let fontSize=isWord?Math.round(w*0.8):Math.round(w*0.7);
   const fam=isWord?"'Amiri','Noto Naskh Arabic',serif":"Georgia,serif";
   tc.textAlign="center";tc.textBaseline="middle";
   tc.font=`bold ${fontSize}px ${fam}`;
-  while(fontSize>16&&tc.measureText(target).width>w*0.92){fontSize-=4;tc.font=`bold ${fontSize}px ${fam}`;}
+  while(fontSize>16&&tc.measureText(target).width>w*0.95){fontSize-=4;tc.font=`bold ${fontSize}px ${fam}`;}
   tc.fillText(target,w/2,h/2);
   const guide=tc.getImageData(0,0,w,h).data;
   const user=traceCtx.getImageData(0,0,w,h).data;
