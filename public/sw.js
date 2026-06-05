@@ -1,4 +1,4 @@
-const CACHE = 'qq-v1';
+const CACHE = 'qq-v2';
 const SHELL = ['index.html', 'dashboard.html', 'manifest.json'];
 
 self.addEventListener('install', e => {
