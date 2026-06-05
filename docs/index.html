@@ -779,12 +779,11 @@
     <div class="input-label">Game Clock</div>
     <div class="clock-chips">
       <button class="clock-chip" onclick="setClockPreset(1)">1 min</button>
-      <button class="clock-chip" onclick="setClockPreset(3)">3 min</button>
-      <button class="clock-chip active" id="chip5" onclick="setClockPreset(5)">5 min</button>
-      <button class="clock-chip" onclick="setClockPreset(10)">10 min</button>
+      <button class="clock-chip" onclick="setClockPreset(2)">2 min</button>
+      <button class="clock-chip active" onclick="setClockPreset(3)">3 min</button>
     </div>
     <div class="custom-clock-row">
-      <input type="number" id="clockMinInput" value="5" min="1" max="60" oninput="onClockInput()"/>
+      <input type="number" id="clockMinInput" value="3" min="1" max="60" oninput="onClockInput()"/>
       <span>minutes custom</span>
     </div>
   </div>
@@ -1312,9 +1311,9 @@ function go(id){
 }
 
 /* ── CLOCK PRESETS ───────────────────────────────── */
-let clockMinutes=5;
+let clockMinutes=3;
 let qSeconds=15;
-const clockPresets=[1,3,5,10];
+const clockPresets=[1,2,3];
 const qPresets=[10,15,20,30];
 
 function setClockPreset(m){
