@@ -517,6 +517,20 @@
     }
     .letter-cell:hover{background:var(--gold-dim);border-color:var(--gold);}
     .letter-cell-name{font-size:9px;color:var(--muted);font-family:-apple-system,sans-serif;font-weight:400;letter-spacing:.3px;}
+    /* Letters | Words toggle */
+    .lw-toggle{display:flex;gap:6px;background:var(--surface);border:1px solid var(--gold-border);border-radius:12px;padding:4px;margin-top:10px;}
+    .lw-tab{flex:1;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:700;padding:8px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;}
+    .lw-tab.active{background:var(--gold-dim);color:var(--gold-light);}
+    /* Word cells (wider than letter cells) */
+    #wordsGrid{grid-template-columns:repeat(2,1fr);}
+    .word-cell{
+      aspect-ratio:auto;min-height:78px;border-radius:14px;border:1px solid var(--gold-border);
+      background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;
+      cursor:pointer;transition:background .12s,border-color .12s;gap:4px;padding:8px;
+    }
+    .word-cell:hover{background:var(--gold-dim);border-color:var(--gold);}
+    .word-cell-ar{font-size:24px;font-weight:700;color:var(--text);font-family:'Amiri','Noto Naskh Arabic',serif;direction:rtl;}
+    .word-cell-tr{font-size:10px;color:var(--muted);font-family:-apple-system,sans-serif;letter-spacing:.3px;}
     /* ── LETTER MODAL ── */
     .letter-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:200;backdrop-filter:blur(4px);}
     .letter-modal-bg.hidden{display:none;}
@@ -943,7 +957,12 @@
     <div class="screen-title">Arabic Letters</div>
   </div>
   <div class="sub-body">
+    <div class="lw-toggle">
+      <button class="lw-tab active" id="lwLettersTab" onclick="setLetterMode('letters')">Letters</button>
+      <button class="lw-tab" id="lwWordsTab" onclick="setLetterMode('words')">Words</button>
+    </div>
     <div class="letters-grid" id="lettersGrid"></div>
+    <div class="letters-grid" id="wordsGrid" style="display:none"></div>
   </div>
   <div class="border-strip" style="margin-top:auto"></div>
 </div>
@@ -953,7 +972,7 @@
   <div class="letter-modal" id="letterModal">
     <div class="letter-modal-header">
       <button class="back-btn" onclick="closeLetterModal()" style="font-size:20px;width:36px;height:36px;">‹</button>
-      <div class="letter-modal-title">Arabic Letter</div>
+      <div class="letter-modal-title" id="letterModalTitle">Arabic Letter</div>
       <button class="letter-modal-close" onclick="closeLetterModal()">✕</button>
     </div>
     <div class="letter-modal-big" id="modalLetter"></div>
@@ -961,6 +980,7 @@
       <div class="letter-modal-name" id="modalName"></div>
       <div class="letter-modal-transliteration" id="modalTranslit"></div>
     </div>
+    <div id="wordContext" style="display:none;text-align:center;font-size:13px;line-height:1.5;color:var(--gold-light);background:var(--surface);border:1px solid var(--gold-border);border-radius:12px;padding:10px 12px;margin-bottom:4px;"></div>
     <button class="letter-pronounce-btn" onclick="pronounceLetter()">🔊 Pronounce</button>
     <div class="trace-wrap" id="traceWrap">
       <div class="trace-guide" id="traceGuide"></div>
@@ -2259,15 +2279,76 @@ function renderLetters(){
     </div>`).join("");
 }
 
+/* ── TRACE WORDS (Islamic words/names/places with context) ── */
+const TRACE_WORDS=[
+  {ar:"مُحَمَّد",tr:"Muhammad ﷺ",type:"Name",context:"The final Prophet and Messenger of Allah ﷺ, born in Makkah."},
+  {ar:"اللَّه",tr:"Allah",type:"Name",context:"The one God — the Creator and Sustainer of all that exists."},
+  {ar:"إِبْرَاهِيم",tr:"Ibrahim",type:"Prophet",context:"Prophet Abraham — called Khalilullah, the friend of Allah."},
+  {ar:"مُوسَى",tr:"Musa",type:"Prophet",context:"Prophet Moses — given the Tawrah, spoke directly with Allah."},
+  {ar:"عِيسَى",tr:"Isa",type:"Prophet",context:"Prophet Jesus — born miraculously to Maryam, given the Injeel."},
+  {ar:"مَرْيَم",tr:"Maryam",type:"Name",context:"Mary, mother of Prophet Isa — honoured with a surah in her name."},
+  {ar:"مَكَّة",tr:"Makkah",type:"Place",context:"The holiest city in Islam, home of the Kaaba and the Hajj."},
+  {ar:"المَدِينَة",tr:"Al-Madinah",type:"Place",context:"The Prophet's ﷺ city — destination of the Hijrah, home of Masjid an-Nabawi."},
+  {ar:"الكَعْبَة",tr:"Al-Kaabah",type:"Place",context:"The cube-shaped House of Allah in Makkah that Muslims face in prayer."},
+  {ar:"القُدْس",tr:"Al-Quds",type:"Place",context:"Jerusalem — home of Masjid al-Aqsa, the first qiblah of Islam."},
+  {ar:"صَلَاة",tr:"Salah",type:"Term",context:"The five daily prayers — the second pillar of Islam."},
+  {ar:"زَكَاة",tr:"Zakah",type:"Term",context:"Obligatory charity — purifying wealth, a pillar of Islam."},
+  {ar:"إِيمَان",tr:"Iman",type:"Term",context:"Faith — belief in Allah, His angels, books, messengers, and more."},
+  {ar:"قُرْآن",tr:"Qur'an",type:"Term",context:"The holy book of Islam, revealed to Prophet Muhammad ﷺ."},
+  {ar:"جَنَّة",tr:"Jannah",type:"Term",context:"Paradise — the eternal reward promised to the believers."},
+  {ar:"صِيَام",tr:"Siyam",type:"Term",context:"Fasting, especially in Ramadan — a pillar of Islam."},
+  {ar:"بِسْمِ اللَّه",tr:"Bismillah",type:"Phrase",context:"“In the name of Allah” — said before beginning any action."},
+  {ar:"الحَمْدُ لله",tr:"Alhamdulillah",type:"Phrase",context:"“All praise is for Allah” — an expression of gratitude."}
+];
+let letterMode="letters";
+function setLetterMode(m){
+  letterMode=m;
+  document.getElementById("lwLettersTab").classList.toggle("active",m==="letters");
+  document.getElementById("lwWordsTab").classList.toggle("active",m==="words");
+  document.getElementById("lettersGrid").style.display=m==="letters"?"":"none";
+  document.getElementById("wordsGrid").style.display=m==="words"?"":"none";
+}
+function renderWords(){
+  document.getElementById("wordsGrid").innerHTML=TRACE_WORDS.map((w,i)=>`
+    <div class="word-cell" onclick="openWordModal(${i})">
+      <span class="word-cell-ar">${w.ar}</span>
+      <span class="word-cell-tr">${w.tr}</span>
+    </div>`).join("");
+}
+function openWordModal(i){
+  const w=TRACE_WORDS[i];
+  modalMode="word";traceTarget=w.ar;currentModalLetter="";
+  document.getElementById("letterModalTitle").textContent="Trace the Word";
+  // Big word instead of single letter
+  const big=document.getElementById("modalLetter");
+  big.textContent=w.ar;big.style.fontFamily="'Amiri','Noto Naskh Arabic',serif";big.style.direction="rtl";
+  document.getElementById("modalName").textContent=w.tr;
+  document.getElementById("modalTranslit").textContent=w.type;
+  const ctx=document.getElementById("wordContext");
+  ctx.textContent=w.context;ctx.style.display="";
+  // Faded guide = the word (Arabic font, sized to fit the box)
+  const guide=document.getElementById("traceGuide");
+  guide.textContent=w.ar;guide.style.fontFamily="'Amiri','Noto Naskh Arabic',serif";
+  guide.style.fontSize=(w.ar.replace(/\s/g,"").length>6?44:64)+"px";guide.style.direction="rtl";
+  document.getElementById("letterQuiz").style.display="none";
+  document.getElementById("letterModalBg").classList.remove("hidden");
+  initTraceCanvas();
+}
+
 /* ── LETTER MODAL ──────────────────────────────────── */
 let currentModalLetter="";
+let modalMode="letter",traceTarget="";
 function openLetterModal(letter,name){
-  currentModalLetter=letter;
-  document.getElementById("modalLetter").textContent=letter;
+  modalMode="letter";traceTarget=letter;currentModalLetter=letter;
+  document.getElementById("letterModalTitle").textContent="Arabic Letter";
+  const big=document.getElementById("modalLetter");
+  big.textContent=letter;big.style.fontFamily="";big.style.direction="";
   document.getElementById("modalName").textContent=name;
   const translit=ARABIC.find(a=>a[0]===letter)?.[2]||"";
   document.getElementById("modalTranslit").textContent=translit;
-  document.getElementById("traceGuide").textContent=letter;
+  document.getElementById("wordContext").style.display="none";
+  const guide=document.getElementById("traceGuide");
+  guide.textContent=letter;guide.style.fontFamily="";guide.style.fontSize="";guide.style.direction="";
   document.getElementById("letterModalBg").classList.remove("hidden");
   initTraceCanvas();
 }
@@ -2287,6 +2368,7 @@ const LETTER_NAME_AR={
 };
 let letterAudioObj=null;
 function pronounceLetter(){
+  if(modalMode==="word"){if(traceTarget)speakArabic(traceTarget);return;}
   if(!currentModalLetter)return;
   const name=LETTER_NAME_AR[currentModalLetter]||currentModalLetter;
   speakArabic(name);
@@ -2380,9 +2462,15 @@ function scoreTrace(){
   tmp.width=w;tmp.height=h;
   const tc=tmp.getContext("2d");
   tc.fillStyle="#fff";
-  tc.font=`bold ${w*0.7}px Georgia,serif`;
+  const target=traceTarget||currentModalLetter;
+  const isWord=modalMode==="word";
+  // Fit the text within the canvas width (words need to shrink to fit)
+  let fontSize=isWord?Math.round(w*0.42):Math.round(w*0.7);
+  const fam=isWord?"'Amiri','Noto Naskh Arabic',serif":"Georgia,serif";
   tc.textAlign="center";tc.textBaseline="middle";
-  tc.fillText(currentModalLetter,w/2,h/2);
+  tc.font=`bold ${fontSize}px ${fam}`;
+  while(fontSize>16&&tc.measureText(target).width>w*0.9){fontSize-=4;tc.font=`bold ${fontSize}px ${fam}`;}
+  tc.fillText(target,w/2,h/2);
   const guide=tc.getImageData(0,0,w,h).data;
   const user=traceCtx.getImageData(0,0,w,h).data;
   let templatePx=0,overlapPx=0,userPx=0;
@@ -2413,7 +2501,12 @@ function submitTrace(){
   const col=score>=40?"#4ade80":score>=15?"#e8c96d":"#a78bfa";
   traceResultEl.innerHTML=`<span style="color:${col}">${grade} (${score}% match)</span>`;
   beep(score>=45?660:330,120);
-  // Proceed to word quiz
+  // Word mode: celebrate + play the word audio, no position quiz
+  if(modalMode==="word"){
+    if(traceTarget)speakArabic(traceTarget);
+    return;
+  }
+  // Letter mode: proceed to position quiz
   const quiz=LETTER_QUIZ[currentModalLetter];
   if(!quiz)return;
   const entry=quiz[Math.floor(Math.random()*quiz.length)];
@@ -2449,7 +2542,7 @@ function resetProgress(){
 }
 
 /* ── INIT ────────────────────────────────────────── */
-renderSurahs();renderLetters();renderNames();initHadith();scheduleMidnightRefresh();initTheme();
+renderSurahs();renderLetters();renderWords();renderNames();initHadith();scheduleMidnightRefresh();initTheme();
 (function initLocation(){
   if(!navigator.geolocation){initPrayerTimes();initQibla();return;}
   navigator.geolocation.getCurrentPosition(
