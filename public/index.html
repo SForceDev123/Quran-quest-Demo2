@@ -1650,7 +1650,7 @@ async function endTurnAndSwitch(msgHtml){
 
   patternLevel=Math.min(MAX_LEVEL,patternLevel+1);
   roundNum++;
-  active=active==="A"?"B":"A";
+  if(gameMode!=="single")active=active==="A"?"B":"A"; // solo: points always stay with the player
   updateSB();
   sequence=buildSeq(patternLevel);
 
