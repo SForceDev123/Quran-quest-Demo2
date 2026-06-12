@@ -1337,6 +1337,13 @@ function pickQ(){
 }
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
+/* ── SANITIZE (XSS prevention) ───────────────────── */
+function sanitize(str){
+  const d=document.createElement("div");
+  d.textContent=String(str);
+  return d.innerHTML;
+}
+
 /* ── THEME ───────────────────────────────────────── */
 function setTheme(t){
   document.documentElement.setAttribute("data-theme",t);
@@ -1746,12 +1753,12 @@ function endGame(){
 
   const goScores=document.getElementById("goScores");
   if(gameMode==="single"){
-    goScores.innerHTML=`<div class="go-score-box winner-box"><div class="go-score-name">${aName}</div><div class="go-score-num">${aScore}</div></div>`;
+    goScores.innerHTML=`<div class="go-score-box winner-box"><div class="go-score-name">${sanitize(aName)}</div><div class="go-score-num">${aScore}</div></div>`;
   } else {
     const aWon=aScore>=bScore;
     goScores.innerHTML=`
-      <div class="go-score-box${aWon?" winner-box":""}"><div class="go-score-name">${aName}</div><div class="go-score-num">${aScore}</div></div>
-      <div class="go-score-box${!aWon?" winner-box":""}"><div class="go-score-name">${bName}</div><div class="go-score-num">${bScore}</div></div>`;
+      <div class="go-score-box${aWon?" winner-box":""}"><div class="go-score-name">${sanitize(aName)}</div><div class="go-score-num">${aScore}</div></div>
+      <div class="go-score-box${!aWon?" winner-box":""}"><div class="go-score-name">${sanitize(bName)}</div><div class="go-score-num">${bScore}</div></div>`;
   }
 
   document.getElementById("gameoverOverlay").classList.remove("hidden");
@@ -1797,7 +1804,7 @@ function renderProgress(){
   if(!board.length){el.textContent="No games yet.";return;}
   el.innerHTML=board.slice(0,8).map(x=>`
     <div class="lb-entry">
-      <span style="font-weight:700;color:var(--text)">${x.teamA}${x.teamB?" vs "+x.teamB:""}</span>
+      <span style="font-weight:700;color:var(--text)">${sanitize(x.teamA)}${x.teamB?" vs "+sanitize(x.teamB):""}</span>
       <span style="color:var(--gold-light)">${x.score||0} pts · ${new Date(x.ts).toLocaleDateString()}</span>
     </div>`).join("");
 }

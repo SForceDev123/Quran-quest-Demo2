@@ -6,11 +6,8 @@
   <title>Qur'an Quest</title>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="Qur'an Quest"/>
-  <meta name="description" content="Islamic educational game — pattern memory, trivia, Surah reader, Arabic letters & more"/>
   <meta name="theme-color" content="#0f0d25"/>
   <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="assets/icons/icon-180.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet"/>
@@ -61,10 +58,6 @@
       font-family:'Georgia','Times New Roman',serif;
       display:flex;flex-direction:column;align-items:center;
       overflow-x:hidden;
-      padding-top:env(safe-area-inset-top);
-      padding-bottom:env(safe-area-inset-bottom);
-      padding-left:env(safe-area-inset-left);
-      padding-right:env(safe-area-inset-right);
     }
     button{touch-action:manipulation;cursor:pointer;border:none;background:none;}
 
@@ -1344,10 +1337,17 @@ function pickQ(){
 }
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
+/* ── SANITIZE (XSS prevention) ───────────────────── */
+function sanitize(str){
+  const d=document.createElement("div");
+  d.textContent=String(str);
+  return d.innerHTML;
+}
+
 /* ── THEME ───────────────────────────────────────── */
 function setTheme(t){
   document.documentElement.setAttribute("data-theme",t);
-  try{localStorage.setItem("qq_theme",t);}catch{}
+  localStorage.setItem("qq_theme",t);
   const isDark=t==="dark";
   const toggle=document.getElementById("themeToggle");
   if(toggle)toggle.checked=isDark;
@@ -1363,10 +1363,9 @@ function initTheme(){
 let soundEnabled=true;
 function setSoundEnabled(on){
   soundEnabled=on;
-  try{localStorage.setItem("qq_sound",on?"1":"0");}catch{}
+  localStorage.setItem("qq_sound",on?"1":"0");
 }
 let actx=null;
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&actx){actx.close();actx=null;}});
 function beep(freq=440,ms=120){
   if(!soundEnabled)return;
   try{
@@ -1384,20 +1383,7 @@ const TONES={1:392,2:494,3:659,4:740,5:330};
 
 /* ── NAVIGATION ──────────────────────────────────── */
 const SCREENS=["menuScreen","nameScreen","gameScreen","surahScreen","surahReaderScreen","progressScreen","lettersScreen","settingsScreen","namesScreen"];
-let _currentScreen=null;
-const _screenCleanups={
-  surahReaderScreen(){
-    if(readerAudio){readerAudio.pause();readerAudio.ontimeupdate=null;readerAudio.onended=null;readerAudio.src="";readerAudio=null;}
-    if(readerVerseAudio){readerVerseAudio.pause();readerVerseAudio.src="";readerVerseAudio=null;}
-    _surahAbort?.abort();_surahAbort=null;
-  },
-  prayerScreen(){
-    if(_adhanAudio){_adhanAudio.pause();_adhanAudio.src="";_adhanAudio=null;}
-  }
-};
 function go(id){
-  if(_currentScreen&&_currentScreen!==id)_screenCleanups[_currentScreen]?.();
-  _currentScreen=id;
   SCREENS.forEach(s=>{const el=document.getElementById(s);if(el)el.classList.toggle("active",s===id);});
 }
 
@@ -1767,12 +1753,12 @@ function endGame(){
 
   const goScores=document.getElementById("goScores");
   if(gameMode==="single"){
-    goScores.innerHTML=`<div class="go-score-box winner-box"><div class="go-score-name">${aName}</div><div class="go-score-num">${aScore}</div></div>`;
+    goScores.innerHTML=`<div class="go-score-box winner-box"><div class="go-score-name">${sanitize(aName)}</div><div class="go-score-num">${aScore}</div></div>`;
   } else {
     const aWon=aScore>=bScore;
     goScores.innerHTML=`
-      <div class="go-score-box${aWon?" winner-box":""}"><div class="go-score-name">${aName}</div><div class="go-score-num">${aScore}</div></div>
-      <div class="go-score-box${!aWon?" winner-box":""}"><div class="go-score-name">${bName}</div><div class="go-score-num">${bScore}</div></div>`;
+      <div class="go-score-box${aWon?" winner-box":""}"><div class="go-score-name">${sanitize(aName)}</div><div class="go-score-num">${aScore}</div></div>
+      <div class="go-score-box${!aWon?" winner-box":""}"><div class="go-score-name">${sanitize(bName)}</div><div class="go-score-num">${bScore}</div></div>`;
   }
 
   document.getElementById("gameoverOverlay").classList.remove("hidden");
@@ -1818,7 +1804,7 @@ function renderProgress(){
   if(!board.length){el.textContent="No games yet.";return;}
   el.innerHTML=board.slice(0,8).map(x=>`
     <div class="lb-entry">
-      <span style="font-weight:700;color:var(--text)">${x.teamA}${x.teamB?" vs "+x.teamB:""}</span>
+      <span style="font-weight:700;color:var(--text)">${sanitize(x.teamA)}${x.teamB?" vs "+sanitize(x.teamB):""}</span>
       <span style="color:var(--gold-light)">${x.score||0} pts · ${new Date(x.ts).toLocaleDateString()}</span>
     </div>`).join("");
 }
@@ -1892,7 +1878,7 @@ function renderSurahs(){
 }
 
 /* ── SURAH READER ─────────────────────────────────── */
-let readerAudio=null,readerTotalAyahs=0,readerTimeUpdate=null,readerGlobalNums=[],readerVerseAudio=null,readerSurahNum=1,readerLastAyah=-1,_surahAbort=null;
+let readerAudio=null,readerTotalAyahs=0,readerTimeUpdate=null,readerGlobalNums=[],readerVerseAudio=null,readerSurahNum=1,readerLastAyah=-1;
 
 function closeReader(){
   if(readerAudio){readerAudio.pause();readerAudio.onended=null;readerAudio.ontimeupdate=null;readerAudio=null;}
@@ -1910,13 +1896,10 @@ async function openSurahReader(n,en,ar){
   document.getElementById("readerPlayBtn").textContent="▶";
   document.getElementById("readerProgressFill").style.width="0%";
   if(readerAudio){readerAudio.pause();readerAudio.ontimeupdate=null;readerAudio=null;}
-  _surahAbort?.abort();
-  _surahAbort=new AbortController();
-  const _surahSig=_surahAbort.signal;
   try{
     const [r1,r2]=await Promise.all([
-      fetch(`https://api.alquran.cloud/v1/surah/${n}/editions/quran-uthmani,en.sahih`,{signal:_surahSig}),
-      fetch(`https://api.qurancdn.com/api/qdc/verses/by_chapter/${n}?words=true&word_fields=text_uthmani,audio_url&per_page=300`,{signal:_surahSig})
+      fetch(`https://api.alquran.cloud/v1/surah/${n}/editions/quran-uthmani,en.sahih`),
+      fetch(`https://api.qurancdn.com/api/qdc/verses/by_chapter/${n}?words=true&word_fields=text_uthmani,audio_url&per_page=300`)
     ]);
     if(!r1.ok) throw new Error(`alquran API ${r1.status}`);
     const j1=await r1.json();
@@ -2213,7 +2196,7 @@ let adhanEnabled=true;
 const ADHAN_URL="https://www.islamcan.com/audio/adhan/azan2.mp3";
 function setAdhanEnabled(on){
   adhanEnabled=on;
-  try{localStorage.setItem("qq_adhan",on?"1":"0");}catch{}
+  localStorage.setItem("qq_adhan",on?"1":"0");
   if(!on)stopAdhan();
 }
 function startAdhanWatcher(){
@@ -2290,15 +2273,13 @@ async function initQibla(){
   }
 }
 
-let _midnightTimer=null;
 function scheduleMidnightRefresh(){
-  if(_midnightTimer)clearTimeout(_midnightTimer);
   const now=new Date();
   const nyNow=new Date(now.toLocaleString("en-US",{timeZone:"America/New_York"}));
   const nextMidnight=new Date(nyNow);
   nextMidnight.setHours(24,0,30,0); // 00:00:30 NY next day
   const msUntilMidnight=nextMidnight-nyNow;
-  _midnightTimer=setTimeout(()=>{initPrayerTimes();scheduleMidnightRefresh();},msUntilMidnight);
+  setTimeout(()=>{initPrayerTimes();scheduleMidnightRefresh();},msUntilMidnight);
 }
 
 /* ── ARABIC LETTERS ──────────────────────────────── */
@@ -2441,12 +2422,9 @@ function openLetterModal(letter,name){
 function closeLetterModal(e){
   if(e&&e.target!==document.getElementById("letterModalBg"))return;
   document.getElementById("letterModalBg").classList.add("hidden");
-  if(letterAudioObj){letterAudioObj.pause();letterAudioObj.src="";letterAudioObj=null;}
+  if(letterAudioObj){letterAudioObj.pause();letterAudioObj=null;}
   speechSynthesis.cancel();
   clearTrace();
-  window.removeEventListener("resize",_traceResizeHandler);
-  const canvas=document.getElementById("traceCanvas");
-  if(canvas){canvas.onpointerdown=null;canvas.onpointermove=null;canvas.onpointerup=null;canvas.onpointercancel=null;}
 }
 // Proper Arabic NAME of each letter (with diacritics) for accurate TTS pronunciation
 const LETTER_NAME_AR={
@@ -2478,35 +2456,26 @@ function speakArabic(text){
   };
   // Voices may load asynchronously on first use
   if(speechSynthesis.getVoices().length)speak();
-  else{speechSynthesis.onvoiceschanged=()=>{speechSynthesis.onvoiceschanged=null;speak();};setTimeout(speak,300);}
+  else{speechSynthesis.onvoiceschanged=speak;setTimeout(speak,300);}
 }
 
 /* ── TRACE CANVAS ──────────────────────────────────── */
 let traceDrawing=false,traceCtx=null;
-function _resizeTraceCanvas(){
+function initTraceCanvas(){
   const canvas=document.getElementById("traceCanvas");
   const wrap=document.getElementById("traceWrap");
-  if(!canvas||!wrap)return;
   canvas.width=wrap.offsetWidth||300;
   canvas.height=wrap.offsetHeight||300;
   traceCtx=canvas.getContext("2d");
+  traceCtx.clearRect(0,0,canvas.width,canvas.height);
   traceCtx.strokeStyle="#c9a84c";
   traceCtx.lineWidth=6;
   traceCtx.lineCap="round";
   traceCtx.lineJoin="round";
-  if(typeof drawGuide==="function")drawGuide();
-}
-function _traceResizeHandler(){_resizeTraceCanvas();}
-function initTraceCanvas(){
-  _resizeTraceCanvas();
-  const canvas=document.getElementById("traceCanvas");
-  traceCtx.clearRect(0,0,canvas.width,canvas.height);
   canvas.onpointerdown=e=>{traceDrawing=true;canvas.setPointerCapture(e.pointerId);traceCtx.beginPath();const p=getPos(canvas,e);traceCtx.moveTo(p.x,p.y);};
   canvas.onpointermove=e=>{if(!traceDrawing)return;const p=getPos(canvas,e);traceCtx.lineTo(p.x,p.y);traceCtx.stroke();};
   canvas.onpointerup=()=>{traceDrawing=false;};
   canvas.onpointercancel=()=>{traceDrawing=false;};
-  window.removeEventListener("resize",_traceResizeHandler);
-  window.addEventListener("resize",_traceResizeHandler);
 }
 function getPos(canvas,e){
   const r=canvas.getBoundingClientRect();
@@ -2552,15 +2521,13 @@ const LETTER_QUIZ={
 };
 
 let currentQuiz=null;
-let _scoreCanvas=null,_scoreCtx=null;
 function scoreTrace(){
   const userCanvas=document.getElementById("traceCanvas");
   const w=userCanvas.width, h=userCanvas.height;
-  // Render guide letter to a reused offscreen canvas
-  if(!_scoreCanvas){_scoreCanvas=document.createElement("canvas");_scoreCtx=_scoreCanvas.getContext("2d");}
-  const tmp=_scoreCanvas;
+  // Render guide letter to a temp canvas
+  const tmp=document.createElement("canvas");
   tmp.width=w;tmp.height=h;
-  const tc=_scoreCtx;
+  const tc=tmp.getContext("2d");
   tc.fillStyle="#fff";
   const target=traceTarget||currentModalLetter;
   const isWord=modalMode==="word";
@@ -2679,7 +2646,7 @@ renderSurahs();renderLetters();renderWords();renderNames();initHadith();schedule
 // restore adhan pref
 (()=>{const a=localStorage.getItem("qq_adhan");if(a==="0"){adhanEnabled=false;const t=document.getElementById("adhanToggle");if(t)t.checked=false;}})();
 let patSpeedMs=400;
-function saveSpeed(){const v=Number(document.getElementById("speedSelect").value);patSpeedMs=v;try{localStorage.setItem("qq_speed",v);}catch{}}
+function saveSpeed(){const v=Number(document.getElementById("speedSelect").value);patSpeedMs=v;localStorage.setItem("qq_speed",v);}
 (()=>{const v=localStorage.getItem("qq_speed");if(v){patSpeedMs=Number(v);const el=document.getElementById("speedSelect");if(el)el.value=v;}})();
 /* Kill switch: remove any old service worker + cached copies so every
    device always loads the latest version straight from the network. */
