@@ -801,7 +801,7 @@
 <div id="nameScreen" class="screen">
   <div class="border-strip"></div>
   <div class="screen-header">
-    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <button class="back-btn" onclick="go('menuScreen')" aria-label="Back to menu">‹</button>
     <div class="screen-title">Who's Playing?</div>
   </div>
   <div class="gold-divider" style="margin-top:16px"><span>✦</span></div>
@@ -859,7 +859,7 @@
   <div class="border-strip"></div>
 
   <div class="game-topbar">
-    <button class="game-back-btn" onclick="confirmLeave()">‹</button>
+    <button class="game-back-btn" onclick="confirmLeave()" aria-label="Leave game">‹</button>
     <div style="font-size:11px;color:var(--gold);letter-spacing:2px;opacity:.6;text-transform:uppercase">Qur'an Quest</div>
     <div style="width:36px"></div>
   </div>
@@ -894,7 +894,7 @@
   </div>
 
   <!-- Status -->
-  <div class="game-status" id="gameStatus">Press <b>▶ Start</b> to begin.</div>
+  <div class="game-status" id="gameStatus" aria-live="polite">Press <b>▶ Start</b> to begin.</div>
 
   <!-- Pads -->
   <div class="pads-row">
@@ -922,7 +922,7 @@
 <div id="surahScreen" class="screen">
   <div class="border-strip"></div>
   <div class="screen-header">
-    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <button class="back-btn" onclick="go('menuScreen')" aria-label="Back to menu">‹</button>
     <div class="screen-title">📖 Surahs</div>
   </div>
   <div class="sub-body">
@@ -934,12 +934,12 @@
 <div id="surahReaderScreen" class="screen">
   <div class="border-strip"></div>
   <div class="screen-header">
-    <button class="back-btn" onclick="closeReader()">‹</button>
+    <button class="back-btn" onclick="closeReader()" aria-label="Back to surah list">‹</button>
     <div class="screen-title" id="readerTitle">📖</div>
   </div>
   <div class="reader-body" id="readerVerses"></div>
   <div class="reader-audio-bar">
-    <button class="reader-play-btn" id="readerPlayBtn" onclick="toggleReaderAudio()">▶</button>
+    <button class="reader-play-btn" id="readerPlayBtn" onclick="toggleReaderAudio()" aria-label="Play or pause recitation">▶</button>
     <div class="reader-progress" id="readerProgress" onclick="seekReaderAudio(event)">
       <div class="reader-progress-fill" id="readerProgressFill"></div>
     </div>
@@ -950,7 +950,7 @@
 <div id="progressScreen" class="screen">
   <div class="border-strip"></div>
   <div class="screen-header">
-    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <button class="back-btn" onclick="go('menuScreen')" aria-label="Back to menu">‹</button>
     <div class="screen-title">🏆 Progress</div>
   </div>
   <div class="sub-body">
@@ -969,7 +969,7 @@
 <div id="lettersScreen" class="screen">
   <div class="border-strip"></div>
   <div class="screen-header">
-    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <button class="back-btn" onclick="go('menuScreen')" aria-label="Back to menu">‹</button>
     <div class="screen-title">Arabic Letters</div>
   </div>
   <div class="sub-body">
@@ -985,11 +985,11 @@
 
 <!-- Letter Modal -->
 <div class="letter-modal-bg hidden" id="letterModalBg" onclick="closeLetterModal(event)">
-  <div class="letter-modal" id="letterModal">
+  <div class="letter-modal" id="letterModal" role="dialog" aria-modal="true" aria-labelledby="letterModalTitle">
     <div class="letter-modal-header">
-      <button class="back-btn" onclick="closeLetterModal()" style="font-size:20px;width:36px;height:36px;">‹</button>
+      <button class="back-btn" onclick="closeLetterModal()" style="font-size:20px;width:36px;height:36px;" aria-label="Close">‹</button>
       <div class="letter-modal-title" id="letterModalTitle">Arabic Letter</div>
-      <button class="letter-modal-close" onclick="closeLetterModal()">✕</button>
+      <button class="letter-modal-close" onclick="closeLetterModal()" aria-label="Close">✕</button>
     </div>
     <div class="letter-modal-big" id="modalLetter"></div>
     <div class="letter-modal-info">
@@ -1025,21 +1025,21 @@
 <div id="settingsScreen" class="screen">
   <div class="border-strip"></div>
   <div class="screen-header">
-    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <button class="back-btn" onclick="go('menuScreen')" aria-label="Back to menu">‹</button>
     <div class="screen-title">⚙️ Settings</div>
   </div>
   <div class="sub-body">
     <div class="setting-row">
       <div class="setting-label">Sound</div>
       <label class="toggle">
-        <input type="checkbox" id="soundToggle" checked onchange="setSoundEnabled(this.checked)"/>
+        <input type="checkbox" id="soundToggle" checked onchange="setSoundEnabled(this.checked)" aria-label="Sound effects"/>
         <div class="toggle-track"></div>
       </label>
     </div>
     <div class="setting-row">
       <div class="setting-label">🕌 Adhan at prayer times</div>
       <label class="toggle">
-        <input type="checkbox" id="adhanToggle" checked onchange="setAdhanEnabled(this.checked)"/>
+        <input type="checkbox" id="adhanToggle" checked onchange="setAdhanEnabled(this.checked)" aria-label="Adhan at prayer times"/>
         <div class="toggle-track"></div>
       </label>
     </div>
@@ -1048,7 +1048,7 @@
       <div class="toggle-wrap">
         <span class="toggle-emoji" id="themeEmoji">🌙</span>
         <label class="toggle">
-          <input type="checkbox" id="themeToggle" checked onchange="setTheme(this.checked?'dark':'light')"/>
+          <input type="checkbox" id="themeToggle" checked onchange="setTheme(this.checked?'dark':'light')" aria-label="Dark mode"/>
           <div class="toggle-track"></div>
         </label>
         <span class="toggle-emoji" id="themeEmoji2">☀️</span>
@@ -1076,7 +1076,7 @@
 <div id="namesScreen" class="screen">
   <div class="border-strip"></div>
   <div class="screen-header">
-    <button class="back-btn" onclick="go('menuScreen')">‹</button>
+    <button class="back-btn" onclick="go('menuScreen')" aria-label="Back to menu">‹</button>
     <div class="screen-title">✨ 99 Names of Allah</div>
   </div>
   <div class="sub-body">
@@ -1102,7 +1102,7 @@
     <div class="adhan-sub" id="adhanSub">Allahu Akbar — حَيَّ على الصلاة</div>
   </div>
   <button class="adhan-btn" id="adhanToggleBtn" onclick="toggleAdhanPlayback()">⏸ Stop</button>
-  <button class="adhan-close" onclick="dismissAdhanBanner()">✕</button>
+  <button class="adhan-close" onclick="dismissAdhanBanner()" aria-label="Dismiss prayer notification">✕</button>
 </div>
 
 <div id="gameoverOverlay" class="gameover-overlay hidden">
@@ -1121,7 +1121,7 @@
       <div class="jqMeta">
         <div class="jqTitle" id="jqTitle">Team A • Question</div>
       </div>
-      <div class="jqTimer" id="jqTimer">15</div>
+      <div class="jqTimer" id="jqTimer" aria-live="polite">15</div>
     </div>
     <div class="jqQar" id="jqQar" dir="rtl" style="font-size:1.55em;font-weight:700;color:var(--gold-light);text-align:center;margin:14px 0 6px;font-family:'Amiri','Noto Naskh Arabic','Geeza Pro',serif;line-height:2"></div>
     <div class="jqQ" id="jqQ">…</div>
@@ -1720,11 +1720,20 @@ pads.forEach(p=>{
   p.addEventListener("click",async()=>{
     if(locked||awaitingQ)return;
     const n=Number(p.dataset.n);
-    await flashPad(n,150);
+    // Validate + lock BEFORE any await, so rapid extra clicks hit the
+    // locked guard instead of racing past it during the flash delay
     const expected=sequence[inputIdx];
-    if(n!==expected){await onMistake(expected,n);return;}
+    if(n!==expected){
+      locked=true;
+      await flashPad(n,150);
+      await onMistake(expected,n);
+      return;
+    }
     inputIdx++;
-    if(inputIdx>=sequence.length)await onPatternComplete();
+    const complete=inputIdx>=sequence.length;
+    if(complete)locked=true;
+    await flashPad(n,150);
+    if(complete)await onPatternComplete();
   });
 });
 
@@ -1894,7 +1903,7 @@ function playAudio(n,btn){
 
 function renderSurahs(){
   document.getElementById("surahList").innerHTML=SURAHS.map(([n,en,ar])=>`
-    <div class="surah-item" style="cursor:pointer" onclick="openSurahReader(${n},'${en.replace(/'/g,"\\'")}','${ar}')">
+    <div class="surah-item" style="cursor:pointer" role="button" tabindex="0" aria-label="Surah ${n}: ${en}" onclick="openSurahReader(${n},'${en.replace(/'/g,"\\'")}','${ar}')">
       <div class="surah-num">${n}</div>
       <div class="surah-name" style="flex:1">${en}</div>
       <div class="surah-arabic" style="margin-right:8px">${ar}</div>
@@ -1957,7 +1966,7 @@ function renderVerses(arabicAyahs,englishAyahs,wordAudioMap={}){
     const words=ayah.text.split(" ").map((w,wi)=>{
       const url=sanitize(wordAudioMap[`${ayah.numberInSurah}-${wi+1}`]||"").replace(/"/g,"&quot;");
       const fallback=readerGlobalNums[i];
-      return `<span class="aya-word" data-audio="${url}" data-fallback="${fallback}" onclick="onWordTap(this,${i})">${sanitize(w)}</span>`;
+      return `<span class="aya-word" role="button" tabindex="0" data-audio="${url}" data-fallback="${fallback}" onclick="onWordTap(this,${i})">${sanitize(w)}</span>`;
     }).join(" ");
     return `<div class="reader-ayah" id="ayah-${i}" data-ayah="${i}">
       <div class="ayah-num">${ayah.numberInSurah}</div>
@@ -2323,7 +2332,7 @@ const ARABIC=[
 ];
 function renderLetters(){
   document.getElementById("lettersGrid").innerHTML=ARABIC.map(([l,name])=>`
-    <div class="letter-cell" onclick="openLetterModal('${l}','${name}')">
+    <div class="letter-cell" role="button" tabindex="0" aria-label="Letter ${name}" onclick="openLetterModal('${l}','${name}')">
       <span>${l}</span>
       <span class="letter-cell-name">${name}</span>
     </div>`).join("");
@@ -2360,7 +2369,7 @@ function setLetterMode(m){
 }
 function renderWords(){
   document.getElementById("wordsGrid").innerHTML=TRACE_WORDS.map((w,i)=>`
-    <div class="word-cell" onclick="openWordModal(${i})">
+    <div class="word-cell" role="button" tabindex="0" aria-label="Word ${w.tr}" onclick="openWordModal(${i})">
       <span class="word-cell-ar">${w.ar}</span>
       <span class="word-cell-tr">${w.tr}</span>
     </div>`).join("");
@@ -2388,6 +2397,7 @@ function openWordModal(i){
   document.getElementById("traceResult").textContent="";
   initTraceCanvas();
   fitWordGuide(w.ar);  // size to ~88% of the box width, slight margin
+  trapLetterModalFocus();
 }
 let _wordGuidePx=0;
 function fitWordGuide(word){
@@ -2432,6 +2442,37 @@ function greenBurst(){
 }
 
 /* ── LETTER MODAL ──────────────────────────────────── */
+/* Focus trap: keep Tab cycling inside the bottom sheet while open, restore focus on close */
+let letterModalReturnFocus=null,letterModalTrapHandler=null;
+function trapLetterModalFocus(){
+  releaseLetterModalFocus(false);
+  const modal=document.getElementById("letterModal");
+  letterModalReturnFocus=document.activeElement;
+  const focusables=()=>[...modal.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null&&!el.disabled);
+  letterModalTrapHandler=e=>{
+    if(e.key!=="Tab")return;
+    const f=focusables();
+    if(!f.length)return;
+    const first=f[0],last=f[f.length-1];
+    if(e.shiftKey&&(document.activeElement===first||!modal.contains(document.activeElement))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&(document.activeElement===last||!modal.contains(document.activeElement))){e.preventDefault();first.focus();}
+  };
+  document.addEventListener("keydown",letterModalTrapHandler,true);
+  const f=focusables();
+  if(f.length)f[0].focus();
+}
+function releaseLetterModalFocus(restore=true){
+  if(letterModalTrapHandler){document.removeEventListener("keydown",letterModalTrapHandler,true);letterModalTrapHandler=null;}
+  if(restore&&letterModalReturnFocus&&typeof letterModalReturnFocus.focus==="function")letterModalReturnFocus.focus();
+  if(restore)letterModalReturnFocus=null;
+}
+/* Keyboard activation for non-native buttons (surah rows, letter/word cells, aya words) */
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Enter"&&e.key!==" ")return;
+  const t=e.target;
+  if(t instanceof HTMLElement&&t.getAttribute("role")==="button"&&t.tagName!=="BUTTON"){e.preventDefault();t.click();}
+});
+
 let currentModalLetter="";
 let modalMode="letter",traceTarget="";
 function openLetterModal(letter,name){
@@ -2447,10 +2488,12 @@ function openLetterModal(letter,name){
   guide.textContent=letter;guide.style.fontFamily="";guide.style.fontSize="";guide.style.direction="";
   document.getElementById("letterModalBg").classList.remove("hidden");
   initTraceCanvas();
+  trapLetterModalFocus();
 }
 function closeLetterModal(e){
   if(e&&e.target!==document.getElementById("letterModalBg"))return;
   document.getElementById("letterModalBg").classList.add("hidden");
+  releaseLetterModalFocus();
   if(letterAudioObj){letterAudioObj.pause();letterAudioObj=null;}
   speechSynthesis.cancel();
   clearTrace();
