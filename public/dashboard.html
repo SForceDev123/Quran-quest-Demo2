@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Qur'an Quest</title>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -58,6 +58,8 @@
       font-family:'Georgia','Times New Roman',serif;
       display:flex;flex-direction:column;align-items:center;
       overflow-x:hidden;
+      padding-top:env(safe-area-inset-top);
+      padding-bottom:env(safe-area-inset-bottom);
     }
     button{touch-action:manipulation;cursor:pointer;border:none;background:none;}
 
@@ -534,7 +536,7 @@
     /* ── LETTER MODAL ── */
     .letter-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:200;backdrop-filter:blur(4px);}
     .letter-modal-bg.hidden{display:none;}
-    .letter-modal{background:var(--card);border-radius:24px 24px 0 0;border:1px solid var(--gold-border);width:100%;max-width:480px;padding:24px 20px 32px;display:flex;flex-direction:column;gap:14px;}
+    .letter-modal{background:var(--card);border-radius:24px 24px 0 0;border:1px solid var(--gold-border);width:100%;max-width:480px;padding:24px 20px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;}
     .letter-modal-header{display:flex;align-items:center;justify-content:space-between;}
     .letter-modal-title{font-size:14px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;}
     .letter-modal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--gold-border);background:var(--surface);color:var(--muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -1344,6 +1346,30 @@ function sanitize(str){
   return d.innerHTML;
 }
 
+/* ── TOAST ───────────────────────────────────────── */
+let _toastId=null;
+function toast(msg){
+  let el=document.getElementById("qqToast");
+  if(!el){
+    el=document.createElement("div");
+    el.id="qqToast";
+    el.style.cssText="position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--card);color:var(--gold-light);border:1px solid var(--gold-border2);border-radius:12px;padding:10px 18px;font-size:13px;z-index:10002;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center;";
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;
+  el.style.opacity="1";
+  clearTimeout(_toastId);
+  _toastId=setTimeout(()=>{el.style.opacity="0";},2200);
+}
+
+/* ── SETTINGS (validated localStorage reads) ─────── */
+function getSetting(key,allowed,fallback){
+  try{
+    const v=localStorage.getItem(key);
+    return allowed.includes(v)?v:fallback;
+  }catch{return fallback;}
+}
+
 /* ── THEME ───────────────────────────────────────── */
 function setTheme(t){
   document.documentElement.setAttribute("data-theme",t);
@@ -1355,8 +1381,7 @@ function setTheme(t){
   document.getElementById("themeEmoji2").textContent=isDark?"☀️":"🌙";
 }
 function initTheme(){
-  const saved=localStorage.getItem("qq_theme")||"dark";
-  setTheme(saved);
+  setTheme(getSetting("qq_theme",["dark","light"],"dark"));
 }
 
 /* ── SOUND ───────────────────────────────────────── */
@@ -1511,7 +1536,7 @@ function startGameClock(){
   gameSecsLeft=clockMinutes*60;
   updateClockUI();
   gameClockId=setInterval(()=>{
-    gameSecsLeft--;
+    gameSecsLeft=Math.max(0,gameSecsLeft-1);
     updateClockUI();
     if(gameSecsLeft<=0){stopGameClock();endGame();}
   },1000);
@@ -1878,9 +1903,10 @@ function renderSurahs(){
 }
 
 /* ── SURAH READER ─────────────────────────────────── */
-let readerAudio=null,readerTotalAyahs=0,readerTimeUpdate=null,readerGlobalNums=[],readerVerseAudio=null,readerSurahNum=1,readerLastAyah=-1;
+let readerAudio=null,readerTotalAyahs=0,readerTimeUpdate=null,readerGlobalNums=[],readerVerseAudio=null,readerSurahNum=1,readerLastAyah=-1,readerLoadToken=0;
 
 function closeReader(){
+  readerLoadToken++; // cancel any in-flight surah load
   if(readerAudio){readerAudio.pause();readerAudio.onended=null;readerAudio.ontimeupdate=null;readerAudio=null;}
   if(readerVerseAudio){readerVerseAudio.pause();readerVerseAudio=null;}
   document.getElementById("readerPlayBtn").textContent="▶";
@@ -1889,6 +1915,7 @@ function closeReader(){
 }
 
 async function openSurahReader(n,en,ar){
+  const loadToken=++readerLoadToken;
   readerSurahNum=n;readerLastAyah=-1;
   go("surahReaderScreen");
   document.getElementById("readerTitle").textContent=`${ar}  ${en}`;
@@ -1904,6 +1931,7 @@ async function openSurahReader(n,en,ar){
     if(!r1.ok) throw new Error(`alquran API ${r1.status}`);
     const j1=await r1.json();
     const j2=r2.ok ? await r2.json() : {verses:[]};
+    if(loadToken!==readerLoadToken)return; // user navigated away or opened another surah
     if(!j1?.data?.[0]?.ayahs || !j1?.data?.[1]?.ayahs) throw new Error('bad payload');
     const arabicAyahs=j1.data[0].ayahs;
     const englishAyahs=j1.data[1].ayahs;
@@ -1918,6 +1946,7 @@ async function openSurahReader(n,en,ar){
     renderVerses(arabicAyahs,englishAyahs,wordAudioMap);
     setupReaderAudio(n);
   }catch(e){
+    if(loadToken!==readerLoadToken)return;
     document.getElementById("readerVerses").innerHTML=`<div class="reader-loading">Failed to load verses. Check connection.</div>`;
   }
 }
@@ -1926,14 +1955,14 @@ function renderVerses(arabicAyahs,englishAyahs,wordAudioMap={}){
   readerGlobalNums=arabicAyahs.map(a=>a.number);
   document.getElementById("readerVerses").innerHTML=arabicAyahs.map((ayah,i)=>{
     const words=ayah.text.split(" ").map((w,wi)=>{
-      const url=wordAudioMap[`${ayah.numberInSurah}-${wi+1}`]||"";
+      const url=sanitize(wordAudioMap[`${ayah.numberInSurah}-${wi+1}`]||"").replace(/"/g,"&quot;");
       const fallback=readerGlobalNums[i];
-      return `<span class="aya-word" data-audio="${url}" data-fallback="${fallback}" onclick="onWordTap(this,${i})">${w}</span>`;
+      return `<span class="aya-word" data-audio="${url}" data-fallback="${fallback}" onclick="onWordTap(this,${i})">${sanitize(w)}</span>`;
     }).join(" ");
     return `<div class="reader-ayah" id="ayah-${i}" data-ayah="${i}">
       <div class="ayah-num">${ayah.numberInSurah}</div>
       <div class="ayah-arabic">${words}</div>
-      <div class="ayah-english">${englishAyahs[i]?.text||""}</div>
+      <div class="ayah-english">${sanitize(englishAyahs[i]?.text||"")}</div>
     </div>`;
   }).join("");
 }
@@ -1958,7 +1987,7 @@ function toggleReaderAudio(){
   if(!readerAudio)return;
   const btn=document.getElementById("readerPlayBtn");
   if(readerAudio.paused){
-    readerAudio.play().catch(()=>{});
+    readerAudio.play().then(()=>{btn.textContent="⏸";}).catch(()=>{btn.textContent="▶";toast("Audio unavailable — check connection");});
     btn.textContent="⏸";
   }else{
     readerAudio.pause();
@@ -1971,7 +2000,7 @@ function seekReaderAudio(e){
   const bar=e.currentTarget;
   const pct=e.offsetX/bar.offsetWidth;
   readerAudio.currentTime=pct*readerAudio.duration;
-  if(readerAudio.paused){readerAudio.play().catch(()=>{});document.getElementById("readerPlayBtn").textContent="⏸";}
+  if(readerAudio.paused){readerAudio.play().then(()=>{document.getElementById("readerPlayBtn").textContent="⏸";}).catch(()=>{document.getElementById("readerPlayBtn").textContent="▶";toast("Audio unavailable — check connection");});}
 }
 
 function onWordTap(el,ayahIdx){
@@ -1983,7 +2012,7 @@ function onWordTap(el,ayahIdx){
   const fallbackNum=el.dataset.fallback;
   const url=(wordUrl?`https://audio.qurancdn.com/${wordUrl}`:null)||`https://cdn.islamic.network/quran/audio/128/ar.alafasy/${fallbackNum}.mp3`;
   readerVerseAudio=new Audio(url);
-  readerVerseAudio.play().catch(()=>{readerVerseAudio=null;});
+  readerVerseAudio.play().catch(()=>{readerVerseAudio=null;toast("Word audio unavailable");});
   readerVerseAudio.onended=()=>{readerVerseAudio=null;};
 }
 
@@ -2647,7 +2676,7 @@ renderSurahs();renderLetters();renderWords();renderNames();initHadith();schedule
 (()=>{const a=localStorage.getItem("qq_adhan");if(a==="0"){adhanEnabled=false;const t=document.getElementById("adhanToggle");if(t)t.checked=false;}})();
 let patSpeedMs=400;
 function saveSpeed(){const v=Number(document.getElementById("speedSelect").value);patSpeedMs=v;localStorage.setItem("qq_speed",v);}
-(()=>{const v=localStorage.getItem("qq_speed");if(v){patSpeedMs=Number(v);const el=document.getElementById("speedSelect");if(el)el.value=v;}})();
+(()=>{const v=getSetting("qq_speed",["600","400","240"],null);if(v){patSpeedMs=Number(v);const el=document.getElementById("speedSelect");if(el)el.value=v;}})();
 /* Kill switch: remove any old service worker + cached copies so every
    device always loads the latest version straight from the network. */
 if('serviceWorker' in navigator){
